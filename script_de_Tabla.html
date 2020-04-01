@@ -1,0 +1,60 @@
+<script type="text/javascript">
+    $(document).ready(function() {
+    $.fn.dataTable.moment("DD/MM/YYYY"); 
+    var circuito_table = $("#circuito_table").DataTable(
+            {
+                processing: true,
+        serverSide: true,
+        autoWidth: false,
+        pagingType: "simple_numbers",
+        language: {"url": "plugins/datatables/spanish.json"},
+        ajax: {
+            url: "expedientes/circuitos/listar_data/18",
+            type: "POST",
+            data: {ci_csrf_token:""}},
+            columns: [
+                {"data": "orden"},
+                {"data": "formulario"},
+                {"data": "oficina"},
+                {"data": "firma"},
+                {"data": "edit"},
+                {"data": "asignar_usuario"},
+            ], 
+            columnDefs: [
+                {
+                    "targets": 0,
+                    "width": "10%"
+                },
+                {
+                    "targets": 1,
+                    "width": "35%",
+                    "sortable": false
+                },
+                {
+                    "targets": 2,
+                    "width": "35%",
+                    "sortable": false
+                }, 
+                {
+                    "targets": 3,
+                    "width": "20%",
+                    "sortable": false
+                }, 
+                {
+                    "targets": 4,
+                    "width": "5%",
+                    "className": "dt-body-center",
+                    "searchable": false,
+                    "sortable": false
+                },
+                {
+                    "targets": 5,
+                    "width": "5%",
+                    "className": "dt-body-center",
+                    "searchable": false,
+                    "sortable": false
+                }, 
+            ],
+            colReorder: true
+        });
+    });</script>

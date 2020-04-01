@@ -1,0 +1,122 @@
+#indice {
+	position:absolute;
+	top:16px;
+	z-index: 2;
+	max-height: 600px;
+	overflow-y: auto;
+	min-width: 250px;
+}
+#indice ul {
+	padding-left: 20px;
+}
+#indice li:hover {
+	transition: all 0.5s ease 0s;
+	background: #4A75B5;
+}
+#indice ul li:hover .pagina {
+	color: #000;
+	transition: all 0.5s ease 0s;
+	background: #fff;}
+#indice li:hover .contenido {
+	transition: all 0.5s ease 0s;
+	color: #fff;
+}
+#indice ul li {
+	position: relative;
+	_width: 100%;
+	_float: left;
+	margin-bottom: 4px;
+	height: 25px;
+	border: 1px solid #ccc;
+	background: #fff;
+}
+#indice .pagina {
+	position: absolute;
+	left: 0;
+	top: 0;
+	width: 25px;
+	text-align: center;
+	font-size: 18px;
+	font-family: arial;
+	height: 100%;
+	line-height: 25px;
+	font-weight: normal;
+	z-index: 1;
+	color: #fff;
+	background: #4A75B5;
+}
+#indice a {
+	padding: 0 10px 0 35px;
+}
+#indice .contenido {
+	display: block;
+	text-decoration: none;
+	outline: none;
+	font-size: 14px;
+	font-family: arial;
+	word-wrap: break-word;
+	overflow: hidden;
+	height: 25px;
+	line-height: 25px;
+	z-index: 2;
+	position: relative;
+	font-weight: Bold;
+	color: #000;
+	text-transform: capitalize;
+}
+#firmas {
+	position:absolute;
+	top:16px;
+	right: 16px;
+	z-index: 2;
+	min-width: 250px;
+	font-size: 14px;
+	font-family: arial;
+	font-weight: Bold;
+}
+#firmas-title{
+	text-transform: capitalize;
+	text-align: center;
+}
+#firmas-content {
+	text-align: center;
+	display: block;
+	text-decoration: none;
+	outline: none;
+	word-wrap: break-word;
+	overflow: hidden;
+	line-height: 18px;
+	z-index: 2;
+	color: #000;
+	max-height: 600px;
+	overflow-y: scroll;
+	padding-right: 5px;
+}
+#firmas .firma {
+	font-size: 14px;
+	display: inline-block;
+	width: 100%;
+	margin-top: 5px;
+	font-weight: 700;
+	border: #000 dashed thin;
+}
+#firmas .solicitud {
+	font-size: 14px;
+	display: inline-block;
+	width: 100%;
+	margin-top: 0;
+	font-weight: 500;
+	border: #000 dashed thin;
+}
+#firmas .firma-valida {
+	color: #fff !important;
+	background-color: #8eb436!important;
+}
+#firmas .firma-invalida {
+	color: #fff !important;
+	background-color: #a94442!important;
+}
+#firmas .firma-pendiente {
+	color: #fff !important;
+	background-color: #ccc!important;
+}

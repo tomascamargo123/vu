@@ -1,0 +1,27 @@
+@charset "utf-8";
+/* CSS Document */
+
+body{
+  margin: 0;
+  font-size: 14px;
+  line-height: 20px;
+}
+table{
+  max-width: 100%;
+  border-spacing: 0;
+  width: 100%;
+  margin-bottom: 20px;
+}
+td{
+  padding: 6px;
+  line-height: 20px;
+  border-top: 1px solid #aaaaaa;
+}
+th{
+  font-weight: bold;
+  padding: 6px;
+  line-height: 20px;
+  border-top: 0;
+  vertical-align: bottom;
+  text-align:left;
+}

@@ -1,0 +1,26 @@
+
+
+{
+	"processing":     "<img src='img/generales/ajax-loader.gif'>",
+	"lengthMenu":     "Mostrar _MENU_ registros",
+	"zeroRecords":    "No se encontraron resultados",
+	"emptyTable":     "Ningún dato disponible en esta tabla",
+	"info":           "Mostrando _START_ al _END_ de un total de _TOTAL_",
+	"infoEmpty":      "Mostrando 0 al 0 de un total de 0",
+	"infoFiltered":   "(filtrado de un total de _MAX_)",
+	"infoPostFix":    "",
+	"search":         "Buscar:",
+	"url":            "",
+	"infoThousands":  ",",
+	"loadingRecords": "Cargando...",
+	"paginate": {
+		"first":    "Primero",
+		"last":     "Último",
+		"next":     ">",
+		"previous": "<"
+	},
+	"aria": {
+		"sortAscending":  ": Activar para ordenar la columna de manera ascendente",
+		"sortDescending": ": Activar para ordenar la columna de manera descendente"
+	}
+}

@@ -1,0 +1,16 @@
+.table-dinamic>tbody>tr {
+    cursor: pointer !important;
+}
+.table-dinamic>tbody>tr:hover {
+    background-color: rgba(0,0,0,0.1) !important;
+}
+.div-alternativa{
+    padding: 10px;
+}
+
+.circulo-origen{
+    height: 100px;width: 100px; border-radius: 50%; background-color: #0066FF;color: white;text-align: center;
+}
+.circulo-destino{
+    height: 100px;width: 100px; border-radius: 50%; background-color: #ff3333;color: white;text-align: center;
+}

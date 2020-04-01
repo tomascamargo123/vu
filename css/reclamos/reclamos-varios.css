@@ -1,0 +1,16 @@
+@charset "utf-8";
+/* CSS Document */
+
+/* Escritorio */
+.chart-legend {
+    list-style: none;
+    height: 100px;
+    display: -webkit-flex;
+    display: flex;
+    -webkit-flex-flow: column wrap;
+    flex-flow: column wrap;
+}
+.chart-legend li {
+    height: 20px;
+    padding: 2px;
+}
