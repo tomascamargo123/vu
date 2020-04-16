@@ -10,6 +10,42 @@ class Alertas_model extends CI_Model
 		parent::__construct();
 	}
 
+	public function TempAlertFirma(){
+		$pendiente = '';
+		$this->sigmu_schema = $this->config->item('sigmu_schema');
+		$firmas_pend = $this->db->select('COUNT(1) as cantidad')
+		->from('firmas_archivos_adjuntos faa')
+		->where('faa.usuario_id', $this->session->userdata('user_id'))
+		->where("faa.firma is null")
+		->where('faa.estado', 'Solicitada')
+		->get()->row();
+		if ($firmas_pend->cantidad > 0)
+		{
+			$pendiente = '&#8226;';
+		}
+		return $pendiente;
+	}
+
+	public function TempAlertExp(){
+		$pendiente = '';
+		$this->sigmu_schema = $this->config->item('sigmu_schema');
+		$pend_emision_e = $this->db->select('COUNT(pase.id) as cantidad')
+				->from("$this->sigmu_schema.pase")
+				->join("$this->sigmu_schema.oficina", 'oficina.id = pase.origen', 'left')
+				->join("$this->sigmu_schema.expediente", 'expediente.id = pase.id_expediente', 'left')
+                                ->join("$this->sigmu_schema.tramite", "tramite.id = expediente.tramite_id")
+				->where('pase.origen', $this->session->userdata('oficina_actual_id'))
+				->where("(pase.respuesta = 'pendiente' OR pase.respuesta = 'rechazado' OR pase.respuesta = 'firma pendiente')")
+				->where("(pase.destino = -1 OR pase.destino = -2)")
+                                ->where("(expediente.digital = 1 OR expediente.digital = 2)")
+				->get()->row();
+		if ($pend_emision_e->cantidad > 0)
+		{
+			$pendiente = '&#8226;';
+		}
+		return $pendiente;
+	}
+
 	public function get()
 	{
 		$alertas = array();

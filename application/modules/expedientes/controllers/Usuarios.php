@@ -41,7 +41,7 @@ class Usuarios extends MY_Controller
 			show_error('No tiene permisos para la acción solicitada', 500, 'Acción no autorizada');
 		}
 		$this->datatables
-			->select('CodiUsua, id')
+			->select('CodiUsua, CONCAT(first_name, " " , last_name) AS DetaUsua, id')
 			->from("users")
 			->where('CodiUsua IS NOT NULL')
 			->where('firma_digital',true)

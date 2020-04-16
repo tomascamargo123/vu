@@ -153,7 +153,7 @@
 							<div class="form-group col-md-3 col-sm-3 col-xs-4" id="div_persona_id">
 								<div class="row">
 									<div class="col-sm-6">
-										<?php echo $fields['persona_id']['label']; ?>
+										<?php echo '<label for="persona_id">Oficina</label>' ?>
 									</div>
 									<div class="col-sm-6">
 										<?php echo $fields['persona_id']['form']; ?>

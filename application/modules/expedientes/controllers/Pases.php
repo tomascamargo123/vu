@@ -1468,7 +1468,8 @@ class Pases extends MY_Controller {
             'id_expediente' => $revision->id_expediente,
             'descripcion' => '',
             'user' => $this->session->userdata('user_id'),
-            'fecha' => date_format(new DateTime(), 'Y-m-d H:i:s')
+            'fecha' => date_format(new DateTime(), 'Y-m-d H:i:s'),
+            'pase_id' => 0
                 ), FALSE);
 
         foreach($adjuntos as $file){
@@ -1480,7 +1481,8 @@ class Pases extends MY_Controller {
                 'id_expediente' => $revision->id_expediente,
                 'descripcion' => '',
                 'user' => $this->session->userdata('user_id'),
-                'fecha' => date_format(new DateTime(), 'Y-m-d H:i:s')
+                'fecha' => date_format(new DateTime(), 'Y-m-d H:i:s'),
+                'pase_id' => 0
                     ), FALSE);
         }
 

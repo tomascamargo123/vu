@@ -49,7 +49,7 @@
 		$.post( "expedientes/archivos_adjuntos/eliminar", { 
 			id: id,
 			<?php if(!empty($adjuntos[0])): ?>
-			id_expediente: <?= $adjuntos[0]->id_expediente ?> 
+			id_expediente: <?= $adjuntos[0]['id_expediente'] ?> 
 			<?php endif;?>
 			})
 		.done(function(){
@@ -476,17 +476,23 @@
 										</thead>
 										<tbody>
 											<?php foreach ($adjuntos as $adjunto): ?>
-												<tr id="adjunto_<?= $adjunto->id ?>">
-													<td><a target="_blank" href="expedientes/archivos_adjuntos/vista_preliminar/<?php echo $adjunto->id; ?>"><?php echo $adjunto->nombre; ?></a></td>
-													<td data-order="<?php echo date_format(new DateTime($adjunto->fecha), 'YmdHis'); ?>"><?php echo date_format(new DateTime($adjunto->fecha), 'd/m/Y H:i:s'); ?></td>
-													<td><?php echo number_format($adjunto->tamanio / 1024, 2) . ' KB'; ?></td>
+												<tr id="adjunto_<?= $adjunto['id'] ?>">
+													<td><a target="_blank" href="expedientes/archivos_adjuntos/vista_preliminar/<?php echo $adjunto['id']; ?>"><?php echo $adjunto['nombre']; ?></a></td>
+													<td data-order="<?php echo date_format(new DateTime($adjunto['fecha']), 'YmdHis'); ?>"><?php echo date_format(new DateTime($adjunto['fecha']), 'd/m/Y H:i:s'); ?></td>
+													<td><?php echo number_format($adjunto['tamanio'] / 1024, 2) . ' KB'; ?></td>
 													<td>
-														<a style="width: 100px;" class="btn btn-xs btn-primary" href="expedientes/archivos_adjuntos/ver/<?php echo $adjunto->id; ?>">Ver</a>
-														<?php if($adjunto->firma_pendiente == '0'): ?>
-															<button style="width: 100px;" type="button" class="btn btn-xs btn-success" data-toggle="modal" data-target="#buscar_usuario_modal" onclick="archivo_adjunto_id =<?php echo $adjunto->id; ?>;">Solicitar Firma</button>
+														<a style="width: 100px;" class="btn btn-xs btn-primary" href="expedientes/archivos_adjuntos/ver/<?php echo $adjunto['id']; ?>">Ver</a>
+														
+														<?php if($adjunto['firma_pendiente'] == '0'): ?>
+															<button style="width: 100px;" type="button" class="btn btn-xs btn-success" data-toggle="modal" data-target="#buscar_usuario_modal" onclick="archivo_adjunto_id =<?php echo $adjunto['id']; ?>;">Solicitar Firma</button>
+															<?php if($pase_id == $adjunto['pase_id']): ?>
+																
+																<button style="width: 100px;" type="button" class="btn btn-xs btn-danger" data-toggle="modal" data-target="#eliminar_adjunto_modal"  onclick="javascript:adjuntoId(<?= $adjunto['id'] ?>)">Eliminar</button>
+															<?php endif;?>
 														<?php endif;?>
-														<?php if($pase_id == $adjunto->pase_id):?>
-															<button style="width: 100px;" type="button" class="btn btn-xs btn-danger" data-toggle="modal" data-target="#eliminar_adjunto_modal"  onclick="javascript:adjuntoId(<?= $adjunto->id ?>)">Eliminar</button>
+														
+														<?php if($pase_id == $adjunto['pase_id']):?>
+															
 														<?php endif;?>
 													</td>
 												</tr>

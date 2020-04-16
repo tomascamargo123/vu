@@ -26,13 +26,17 @@ class Avisos extends MY_Controller
 		}
 		$tableData = array(
 			'columns' => array(
-				array('label' => 'Mensaje', 'data' => 'mensaje', 'sort' => 'aviso.mensaje', 'width' => 60),
-				array('label' => 'Activo', 'data' => 'activo', 'sort' => 'activo', 'width' => 10),
-				array('label' => 'Oficina', 'data' => 'oficina', 'sort' => 'oficina.nombre', 'width' => 25),
+				array('label' => 'Mensaje', 'data' => 'mensaje', 'sort' => 'aviso.mensaje', 'width' => 40),
+				array('label' => 'Estado', 'data' => 'estado', 'sort' => 'aviso.estado', 'width' => 10),
+				array('label' => 'Importancia', 'data' => 'importancia', 'sort' => 'aviso.importancia', 'width' => 10),
+				array('label' => 'Usuario', 'data' => 'usuario', 'sort' => 'usuario.DetaUsua', 'width' => 10),
+				array('label' => 'Fecha', 'data' => 'audi_fecha', 'sort' => 'audi_fecha', 'width' => 15),
 				array('label' => '', 'data' => 'edit', 'width' => 5, 'class' => 'dt-body-center', 'responsive_class' => 'all', 'sortable' => 'false', 'searchable' => 'false')
 			),
 			'table_id' => 'avisos_table',
-			'source_url' => 'expedientes/avisos/listar_data'
+			'source_url' => 'expedientes/avisos/listar_data',
+			'order' => array(array(4, 'desc')),
+			'initComplete' => 'function () { changeStyles(); }'
 		);
 		$data['html_table'] = buildHTML($tableData);
 		$data['js_table'] = buildJS($tableData);
@@ -49,10 +53,19 @@ class Avisos extends MY_Controller
 			show_error('No tiene permisos para la acción solicitada', 500, 'Acción no autorizada');
 		}
 		$this->datatables
-			->select('aviso.id, aviso.mensaje, (CASE aviso.activo WHEN 0 THEN \'Inactivo\' ELSE \'Activo\' END) as activo, aviso.oficina_id, (COALESCE(oficina.nombre, \'Todas las oficinas\')) as oficina')
+			->select('aviso.id, aviso.mensaje, aviso.usuario, 
+			(CASE aviso.estado 
+			WHEN 0 THEN \'Pendiente\' 
+			WHEN 1 THEN \'En proceso\' 
+			WHEN 2 THEN \'Realizado\' 
+			ELSE \'Rechazado\' END) as estado, 
+			(CASE aviso.importancia 
+			WHEN 0 THEN \'Baja\' 
+			WHEN 1 THEN \'Moderada\' 
+			ELSE \'Alta\' END) as importancia,
+			aviso.audi_fecha')
 			->unset_column('id')
 			->from("$this->sigmu_schema.aviso")
-			->join("$this->sigmu_schema.oficina", 'oficina.id = aviso.oficina_id', 'left')
 			->add_column('edit', '<a href="expedientes/avisos/ver/$1" title="Administrar"><i class="fa fa-cogs"></i></a>', 'id');
 
 		echo $this->datatables->generate();
@@ -70,8 +83,9 @@ class Avisos extends MY_Controller
 			redirect("expedientes/avisos/listar", 'refresh');
 		}
 		$this->load->model('expedientes/oficinas_model');
-		$this->array_oficina_control = $array_oficina = $this->get_array('oficinas', 'nombre', 'id', array('where' => array(array('column' => 'id >', 'value' => '0'))), array('NULL' => '-- Todas las oficinas --'));
 		$this->array_activo_control = $array_activo = array('1' => 'Activo', '0' => 'Inactivo');
+		$this->array_importancia_control = $array_importancia = array('0' => 'Baja', '1' => 'Moderada', '2' => 'Alta');
+		$this->array_estado_control = $array_estado = array('0' => 'Pendiente', '1' => 'En proceso', '2' => 'Rechazado', '3' => 'Resuelto');
 		$this->set_model_validation_rules($this->avisos_model);
 		if ($this->form_validation->run() === TRUE)
 		{
@@ -79,8 +93,11 @@ class Avisos extends MY_Controller
 			$trans_ok&= $this->avisos_model->create(array(
 				'mensaje' => $this->input->post('mensaje'),
 				'activo' => $this->input->post('activo'),
-				'oficina_id' => $this->input->post('oficina')));
-
+				'estado' => $this->input->post('estado'),
+				'importancia' => $this->input->post('importancia'),
+				'usuario' => $this->session->userdata('CodiUsua'),
+			));
+				
 			if ($trans_ok)
 			{
 				$this->session->set_flashdata('message', $this->avisos_model->get_msg());
@@ -132,8 +149,9 @@ class Avisos extends MY_Controller
 			show_404();
 		}
 		$this->load->model('expedientes/oficinas_model');
-		$this->array_oficina_control = $array_oficina = $this->get_array('oficinas', 'nombre', 'id', array('where' => array(array('column' => 'id >', 'value' => '0'))), array('NULL' => '-- Todas las oficinas --'));
 		$this->array_activo_control = $array_activo = array('1' => 'Activo', '0' => 'Inactivo');
+		$this->array_importancia_control = $array_importancia = array('1' => 'Baja', '2' => 'Moderada', '0' => 'Alta');
+		$this->array_estado_control = $array_estado = array('1' => 'Pendiente', '2' => 'En proceso', '3' => 'Rechazado', '0' => 'Resuelto');
 		$this->set_model_validation_rules($this->avisos_model);
 		if (isset($_POST) && !empty($_POST))
 		{
@@ -149,7 +167,10 @@ class Avisos extends MY_Controller
 					'id' => $this->input->post('id'),
 					'mensaje' => $this->input->post('mensaje'),
 					'activo' => $this->input->post('activo'),
-					'oficina_id' => $this->input->post('oficina')));
+					'estado' => $this->input->post('estado'),
+					'importancia' => $this->input->post('importancia'),
+					'usuario' => $this->session->userdata('CodiUsua'),
+				));
 				if ($trans_ok)
 				{
 					$this->session->set_flashdata('message', $this->avisos_model->get_msg());
@@ -204,8 +225,9 @@ class Avisos extends MY_Controller
 		}
 
 		$this->load->model('expedientes/oficinas_model');
-		$array_oficina = $this->get_array('oficinas', 'nombre', 'id', array('where' => array(array('column' => 'id >', 'value' => '0'))), array('NULL' => '-- Todas las oficinas --'));
 		$array_activo = array('1' => 'Activo', '0' => 'Inactivo');
+		$array_importancia = array('1' => 'Baja', '2' => 'Moderada', '0' => 'Alta');
+		$array_estado = array('1' => 'Pendiente', '2' => 'En proceso', '3' => 'Rechazado', '0' => 'Resuelto');
 		if (isset($_POST) && !empty($_POST))
 		{
 			if ($id !== $this->input->post('id'))
@@ -264,8 +286,9 @@ class Avisos extends MY_Controller
 		}
 
 		$this->load->model('expedientes/oficinas_model');
-		$array_oficina = $this->get_array('oficinas', 'nombre', 'id', array('where' => array(array('column' => 'id >', 'value' => '0'))), array('NULL' => '-- Todas las oficinas --'));
 		$array_activo = array('1' => 'Activo', '0' => 'Inactivo');
+		$array_importancia = array('1' => 'Baja', '2' => 'Moderada', '0' => 'Alta');
+		$array_estado = array('1' => 'Pendiente', '2' => 'En proceso', '3' => 'Rechazado', '0' => 'Resuelto');
 		$data['error'] = $this->session->flashdata('error');
 
 		$data['fields'] = array();

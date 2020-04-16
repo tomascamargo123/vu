@@ -13,11 +13,12 @@ class Avisos_model extends MY_Model
 		$this->aud_table_name = "{$this->sigmu_schema}_aud.aviso";
 		$this->msg_name = 'Aviso';
 		$this->id_name = 'id';
-		$this->columnas = array('id', 'mensaje', 'activo', 'oficina_id');
+		$this->columnas = array('id', 'mensaje', 'activo', 'estado', 'importancia', 'usuario');
 		$this->fields = array(
 			array('name' => 'mensaje', 'label' => 'Mensaje', 'maxlength' => '255'),
-			array('name' => 'activo', 'label' => 'Activo', 'input_type' => 'combo'),
-			array('name' => 'oficina', 'label' => 'Oficina', 'input_type' => 'combo', 'id_name' => 'oficina_id')
+			array('name' => 'importancia', 'label' => 'Importancia', 'input_type' => 'combo'),
+			array('name' => 'estado', 'label' => 'Estado', 'input_type' => 'combo'),
+			array('name' => 'activo', 'label' => 'Activo', 'input_type' => 'combo')
 		);
 		$this->requeridos = array();
 		//$this->unicos = array();

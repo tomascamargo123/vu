@@ -1172,9 +1172,11 @@ class Expedientes extends MY_Controller
                     ),
                     'id' => $expediente->id,
                     'sort_by' => 'faa.fecha_solicitud desc'
-                ));
+				));
+		
                 
 		$this->load->model('expedientes/pases_model');
+		
 		$data['pases'] = $this->pases_model->get(array(
 			'select' => 'pase.id, pase.fecha, pase.origen, oe.nombre ofi_emi, pase.usuario_emisor usu_emi, pase.destino, or.nombre ofi_rec, pase.usuario_receptor usu_rec, pase.respuesta, pase.fojas, pase.nota_pase_id, np.contenido, IF(e.firma_pendiente = 1, \'display: none;\',\'\') as btn_disabled, r.estado as revision_estado',
 			'join' => array(
@@ -1215,19 +1217,13 @@ class Expedientes extends MY_Controller
 			'sort_by' => 'inicio'
 		));
 		$this->load->model('expedientes/archivos_adjuntos_model');
-		$data['adjuntos'] = $this->archivos_adjuntos_model->get(
-                        array(
-                            'select' => array('archivoadjunto.id', 'archivoadjunto.nombre', 'archivoadjunto.tamanio', 'archivoadjunto.tipodecontenido', 'archivoadjunto.fecha','e.firma_pendiente','archivoadjunto.pase_id','archivoadjunto.id_expediente'),
-                            'join' => array(
-                                array('type' => 'left','table' => 'sigmu.expediente e', 'where' => 'e.id = archivoadjunto.id_expediente')
-                            ),
-                            'id_expediente' => $expediente->id, 'sort_by' => 'fecha DESC')
-                        );
+		$data['adjuntos'] = $this->archivos_adjuntos_model->get_adjuntos($expediente->id);
                 //var_dump($data['adjuntos']);die();
 
 		$tableData_usuarios = array(
 			'columns' => array(
-				array('label' => 'Usuario', 'data' => 'CodiUsua', 'sort' => 'CodiUsua', 'width' => 95),
+				array('label' => 'Usuario', 'data' => 'CodiUsua', 'sort' => 'CodiUsua', 'width' => 10),
+				array('label' => 'Nombre', 'data' => 'DetaUsua', 'sort' => 'DetaUsua', 'width' => 95),
 				array('label' => '', 'data' => 'select', 'width' => 5, 'class' => 'dt-body-center', 'responsive_class' => 'all', 'sortable' => 'false', 'searchable' => 'false')
 			),
 			'table_id' => 'usuarios_table',
@@ -1308,6 +1304,7 @@ class Expedientes extends MY_Controller
 				'respuesta = "pendiente"'
 			)
 		))[0]->id;
+		$data['ver_expediente'] = TRUE;
 		$data['pase_id'] = $pase_id;
 		$data['imprime_caratula'] = $imprime_caratula;
 		$data['txt_btn'] = NULL;
@@ -1582,7 +1579,7 @@ class Expedientes extends MY_Controller
 		}
 	}
 
-	public function generar_informe($id = NULL, $plantilla_id = NULL)
+	public function generar_informe($id = NULL, $pase_id = NULL, $plantilla_id = NULL)
 	{
 		if (!in_groups($this->grupos_permitidos, $this->grupos) || $id == NULL || !ctype_digit($id))
 		{
@@ -1602,6 +1599,13 @@ class Expedientes extends MY_Controller
 				redirect("expedientes/expedientes/ver/$id", 'refresh');
 			}
 		}
+		$this->load->model('expedientes/pases_model');
+		$ultimo_pase = $this->pases_model->get(array(
+			'select' => 'id',
+			'id_expediente' => $expediente->id,
+			'sort_by' => 'id desc',
+			'limit' => '1'
+		));
 		$expediente = $this->expedientes_model->get(array(
 			'id' => $id,
 			'join' => array(
@@ -1672,7 +1676,8 @@ class Expedientes extends MY_Controller
 					'contenido' => $pdf_content,
 					'id_expediente' => $expediente->id,
 					'descripcion' => 'NULL',
-					'fecha' => date_format(new DateTime(), 'Y-m-d H:i:s')
+					'fecha' => date_format(new DateTime(), 'Y-m-d H:i:s'),
+					'pase_id' => $pase_id
 					), FALSE);
 				$archivo_adjunto_id = $this->archivos_adjuntos_model->get_row_id();
 
@@ -1746,6 +1751,7 @@ class Expedientes extends MY_Controller
 		$data['js_table_plantillas'] = buildJS($tableData_plantillas);
 
 		$data['expediente'] = $expediente;
+		$data['ultimo_pase'] = $ultimo_pase;
 		if($plantilla_id != NULL){
 			$data['firma_pad'] = $this->plantillas_model->getCantFirmasPad($plantilla_id);
 		}
@@ -2560,11 +2566,13 @@ class Expedientes extends MY_Controller
 		if (isset($archivo_adjunto))
 		{
 			$oficina = $this->expedientes_model->get_oficina($expediente_id);
+			/*
 			if ($oficina !== $this->session->userdata('oficina_actual_id') && !in_groups($this->grupos_admin, $this->grupos))
 			{
 				$this->session->set_flashdata('error', 'No puede ver firmas de expedientes que no estén en su oficina');
 				redirect("expedientes/expedientes/ver/$expediente_id");
 			}
+			*/
 			$firmas = $this->firmas_archivos_adjuntos_model->get_firmas($archivo_adjunto->id);
 			if (!empty($firmas))
 			{

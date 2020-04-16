@@ -466,6 +466,9 @@ class MY_Controller extends CI_Controller
 		$view_data['modulo'] = isset($this->modulo) ? $this->modulo : '';
 		$view_data['controlador'] = $this->router->fetch_class();
 		$view_data['metodo'] = $this->router->fetch_method();
+		$this->load->model('alertas_model');
+		$alerta_firma = $this->alertas_model->TempAlertFirma();
+		$alerta_exp = $this->alertas_model->TempAlertExp();
 		$alertas = array(
 			array(
 				'url' => 'expedientes/expedientes/listar',
@@ -477,14 +480,14 @@ class MY_Controller extends CI_Controller
 			array(
 				'url' => 'expedientes/pases/listar_pendientes_ee',
 				'label' => 'Expedientes Electronico pendientes de emisión',
-				'value' => '&#8226;',
+				'value' => $alerta_exp,
 				'icon' => 'fa-sign-out',
 				'class_name' => 'label-success'
 			),
 			array(
 				'url' => 'expedientes/firmas/bandeja',
 				'label' => 'Firmas pendientes',
-				'value' => '',
+				'value' => $alerta_firma,
 				'icon' => 'fa-pencil',
 				'class_name' => 'label-info'
 			),

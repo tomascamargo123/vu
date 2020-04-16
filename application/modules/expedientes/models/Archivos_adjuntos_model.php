@@ -88,6 +88,36 @@ class Archivos_adjuntos_model extends MY_Model
             return $this->db->query("SELECT id FROM sigmu.pase WHERE id_expediente = $id_expediente AND respuesta = 'pendiente';")->result_array();
         }
     }
+
+    public function get_adjuntos($id_expediente = NULL){
+        if($id_expediente != NULL){
+            return $this->db->query("SELECT
+            `archivoadjunto`.`id`,
+            `archivoadjunto`.`nombre`,
+            `archivoadjunto`.`tamanio`,
+            `archivoadjunto`.`tipodecontenido`,
+            `archivoadjunto`.`pase_id`,
+            `archivoadjunto`.`id_expediente`,
+            `archivoadjunto`.`fecha`,
+            firmas_archivos_adjuntos.estado,
+            CASE 
+            WHEN estado = 'Solicitada' THEN 1
+            ELSE 0
+            END AS firma_pendiente
+          FROM `sigmu`.`archivoadjunto`
+            LEFT JOIN `expedientes`.`firmas_archivos_adjuntos`
+              ON `archivoadjunto`.`id` = `firmas_archivos_adjuntos`.`archivo_adjunto_id`
+          WHERE firmas_archivos_adjuntos.id IN (SELECT
+            MAX(firmas_archivos_adjuntos.id)
+          FROM expedientes.firmas_archivos_adjuntos 
+          RIGHT JOIN sigmu.archivoadjunto 
+          ON firmas_archivos_adjuntos.archivo_adjunto_id = archivoadjunto.id
+          WHERE `sigmu`.`archivoadjunto`.`id_expediente` = '$id_expediente'
+          GROUP BY nombre) OR (firmas_archivos_adjuntos.id IS NULL AND 
+          `sigmu`.`archivoadjunto`.`id_expediente` = '$id_expediente')
+          ORDER BY firmas_archivos_adjuntos.id DESC")->result_array();
+        }
+    }
 }
 /* End of file Archivos_adjuntos_model.php */
 /* Location: ./application/modules/expedientes/models/Archivos_adjuntos_model.php */

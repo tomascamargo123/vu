@@ -48,6 +48,7 @@ function loadApp() {
 				$.ajax('../firmas/' + expediente_id + '/' + page, {
 					dataType: 'json',
 					success: function(data) {
+						console.log(data);
 						var html = '';
 						if (data !== 'no_data') {
 							$('#firmas-title').html('<span style="font-size:18px;"><i class="fa fa-pencil-square-o" aria-hidden="true"></i> Firmas <i class="fa fa-pencil-square-o" aria-hidden="true"></i><br/>Foja ' + data.foja + '</span><br/>' + data.title);

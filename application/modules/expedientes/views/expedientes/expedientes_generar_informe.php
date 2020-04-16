@@ -1,7 +1,7 @@
 <script>
 	var plantillas_table;
 	function seleccionar_plantilla(id) {
-		window.location.replace('expedientes/expedientes/generar_informe/<?php echo $expediente->id; ?>/' + id);
+		window.location.replace('expedientes/expedientes/generar_informe/<?php echo $expediente->id; ?>/<?php echo $ultimo_pase[0]->id; ?>/' + id);
 	}
 	$(document).ready(function() {
 <?php if (!empty($plantilla)): ?>

@@ -124,6 +124,10 @@ if (!function_exists('buildJS'))
 		$tableJS .= $columnDefs;
 		$tableJS .= 'colReorder: true,'
 			. 'drawCallback: function(setting){
+				var id = "'.$tableData['table_id'].'"
+				if(id === "avisos_table"){
+					changeStyles();
+				}
 				if (Math.ceil((this.fnSettings().fnRecordsDisplay()) / this.fnSettings()._iDisplayLength) > 1) {
 					$("#'.$tableData['table_id'].'_paginate").css("display", "block");     
 				} else {                

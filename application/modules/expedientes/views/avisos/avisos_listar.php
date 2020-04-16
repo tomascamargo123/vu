@@ -1,3 +1,61 @@
+<script>
+function changeStyles () {
+	$('#avisos_table tr').each(function() {
+		if ($(this).find("td:first").length > 0) {
+			var estado = $(this).find("td").eq(1);
+			var importancia = $(this).find("td").eq(2);
+			switch(estado.html()){
+				case 'Pendiente':
+					$(estado).attr('class', 'amarillo');
+					break;
+				case 'En proceso':
+					$(estado).attr('class', 'celeste');
+					break;
+				case 'Resuelto':
+					$(estado).attr('class', 'verde');
+					break;
+				case 'Rechazado':
+					$(estado).attr('class', 'rojo');
+					break;
+				default:
+					break;
+			}
+			console.log(importancia.html());
+			switch(importancia.html()){
+				case 'Baja':
+					$(importancia).attr('class', 'verde');
+					break;
+				case 'Moderada':
+					$(importancia).attr('class', 'amarillo');
+					break;
+				case 'Alta':
+					$(importancia).attr('class', 'rojo');
+					break;
+				default:
+					break;
+			}
+		}
+	});
+}
+</script>
+<style>
+.amarillo{
+	color: #f39c12;
+	font-weight: bold;
+}
+.verde{
+	color: #8eb436;
+	font-weight: bold;
+}
+.celeste{
+	color: #00c0ef;
+	font-weight: bold;
+}
+.rojo{
+	color: #ac2925;
+	font-weight: bold;
+}
+</style>
 <div class="content-wrapper">
 	<section class="content-header">
 		<h1>

@@ -47,6 +47,7 @@ function actualizar_tramites() {
 	$('#caratula').val('');
 	jQuery('#btn_buscar_oficina_solicitante').hide();
 	jQuery('#btn_buscar_solicitante').hide();
+
 	$.ajax({
 		url: "expedientes/tramites/get_tramites",
 		type: "POST",
@@ -69,6 +70,7 @@ function actualizar_tramites() {
 			jQuery('#div_persona_id').show();
 			jQuery('#div_caratula').attr('class', 'form-group col-md-6 col-sm-6 col-xs-8');
 			jQuery('#persona_id').removeAttr('disabled');
+			
 		} else if (tipo_tramite === 'E') {
 			jQuery('#btn_buscar_solicitante').show();
 			jQuery('#div_persona_id').hide();
