@@ -41,6 +41,7 @@ if (!function_exists('load_permisos_nav'))
 		$expedientes_pases_active = '';
 		$expedientes_administracion_active = '';
 		$expedientes_estadisticas_active = '';
+		$requerimientos_active = '';
 		switch ($controlador)
 		{
 			case 'grupos':
@@ -104,7 +105,9 @@ if (!function_exists('load_permisos_nav'))
 				$expedientes_active = ' active';
 				$expedientes_pases_active = ' class="active"';
 				break;
-			case 'avisos':
+			case 'requerimientos':
+				$requerimientos_active = ' active';
+				break;
 			case 'oficinas':
 			case 'plantillas':
 			case 'tramites':
@@ -235,7 +238,6 @@ if (!function_exists('load_permisos_nav'))
 			$nav .= '</li>';
 			$nav .= '<li' . $expedientes_administracion_active . '><a href="#"><i class="fa fa-circle-o"></i>Administración<i class="fa fa-angle-left pull-right"></i></a>';
 			$nav .= '<ul class="treeview-menu">';
-			$nav .= '<li><a href="expedientes/avisos/listar"><i class="fa fa-circle-o"></i>Avisos</a></li>';
 			$nav .= '<li><a href="expedientes/cargos/listar"><i class="fa fa-circle-o"></i>Cargos</a></li>';
 			$nav .= '<li><a href="expedientes/informes_infogov/listar"><i class="fa fa-circle-o"></i>Informes Infogov</a></li>';
 			$nav .= '<li><a href="expedientes/oficinas/listar"><i class="fa fa-circle-o"></i>Oficinas y Secretarías</a></li>';
@@ -323,6 +325,16 @@ if (!function_exists('load_permisos_nav'))
 			$nav .= '</ul>';
 			$nav .= '</li>';
 			$nav .= '</ul>';
+			$nav .= '</li>';
+		}
+		if (in_groups($grupos_admin, $grupos) || in_groups($grupos_reclamos_admin, $grupos))
+		{
+			$nav .= '<li class="treeview' . $requerimientos_active . '">';
+			$nav .= '<a href="requerimientos/listar"><i class="fa fa-archive"></i> <span>Requerimientos</span> <i class="fa fa-angle-left pull-right"></i></a>';
+			$nav .= '</li>';
+		} else {
+			$nav .= '<li class="treeview' . $requerimientos_active . '">';
+			$nav .= '<a href="requerimientos/listar_personales"><i class="fa fa-archive"></i> <span>Requerimientos</span> <i class="fa fa-angle-left pull-right"></i></a>';
 			$nav .= '</li>';
 		}
 		return $nav;

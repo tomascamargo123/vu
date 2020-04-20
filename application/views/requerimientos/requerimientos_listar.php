@@ -1,6 +1,6 @@
 <script>
 function changeStyles () {
-	$('#avisos_table tr').each(function() {
+	$('#requerimientos_table tr').each(function() {
 		if ($(this).find("td:first").length > 0) {
 			var estado = $(this).find("td").eq(1);
 			var importancia = $(this).find("td").eq(2);
@@ -59,12 +59,11 @@ function changeStyles () {
 <div class="content-wrapper">
 	<section class="content-header">
 		<h1>
-			Avisos
+			Requerimientos
 		</h1>
 		<ol class="breadcrumb">
 			<li><a href=""><i class="fa fa-home"></i> Inicio</a></li>
-			<li><a href="expedientes/escritorio">Expedientes</a></li>
-			<li><a href="expedientes/<?php echo $controlador; ?>"><?php echo ucfirst($controlador); ?></a></li>
+			<li><a href="<?php echo $controlador; ?>"><?php echo ucfirst($controlador); ?></a></li>
 			<li class="active"><?php echo ucfirst($metodo); ?></li>
 		</ol>
 	</section>
@@ -87,7 +86,7 @@ function changeStyles () {
 			<div class="col-xs-12">
 				<div class="box box-primary">
 					<div class="box-header with-border">
-						<h3 class="box-title">Listado de tickets</h3>
+						<h3 class="box-title">Listado de requerimientos</h3>
 						<div class="box-tools pull-right">
 							<button class="btn btn-box-tool" data-widget="collapse"><i class="fa fa-minus"></i></button>
 						</div>
@@ -97,7 +96,7 @@ function changeStyles () {
 						<?php echo $html_table; ?>
 					</div>
 					<div class="box-footer">
-						<a class="btn btn-primary pull-right" href="expedientes/avisos/agregar" title="Agregar aviso">Agregar aviso</a>
+						<a class="btn btn-primary pull-right" href= <?php echo ($admin) ? "requerimientos/agregar" : "requerimientos/agregar_personales" ?> title="Agregar requerimientos">Agregar requerimientos</a>
 					</div>
 				</div>
 			</div>
