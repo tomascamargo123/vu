@@ -58,7 +58,7 @@
 					<div class="box-footer">
 						<a class="btn btn-default" href="usuarios/listar" title="Cancelar">Cancelar</a>
 						<?php echo (!empty($txt_btn)) ? form_submit($data_submit, $txt_btn) : ''; ?>
-						<?php echo ($txt_btn === 'Editar' || $txt_btn === 'Eliminar') ? form_hidden('id', $usuario->id) : ''; ?>
+						<?php echo ($txt_btn === 'Guardar' || $txt_btn === 'Eliminar') ? form_hidden('id', $usuario->id) : ''; ?>
 					</div>
 					<?php echo form_close(); ?>
 				</div>

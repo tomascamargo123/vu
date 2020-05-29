@@ -62,7 +62,16 @@ class Usuarios_model extends MY_Model
         $this->db->where('inhausua',0);
         $rs = $this->db->get('infogov.usuario');
         return $rs->result_array();
-    }
+	}
+	
+	public function comprobar_usuario($password, $user){
+		$query = $this->db->query("SELECT * FROM sigmu.usuario WHERE ClavUsua = MD5('$password') AND CodiUsua = '$user'")->result_array();
+		if(count($query) > 0){
+			return TRUE;
+		} else {
+			return FALSE;
+		}
+	}
 }
 /* End of file Usuarios_model.php */
 /* Location: ./application/modules/expedientes/models/Usuarios_model.php */

@@ -3,6 +3,106 @@
 		$('#contenido_nota').html(nota);
 		$('#contenido_nota_modal').modal();
 	}
+	function subir(btn){
+		var fila = $(btn).parent().parent();
+		var val1 = $(fila).find('td:first-child').html();
+		if (val1 > 1) {
+			var id1 = $(fila).attr('id');
+			var id2 = 0;
+			var val2 = parseInt(val1)-1;
+			console.log(val1+' '+val2);
+			var tabla = document.getElementById("tbl_adjuntos");
+			var cant = tabla.rows.length;
+			for(var x=0; x<cant; x++){
+				var row = tabla.rows[x];
+				console.log('asd');
+				if(row.cells[0].innerHTML === val2.toString()){
+					console.log('qwe');
+					row.cells[0].innerHTML = val1;
+					id2 = $(row).attr('id');
+				}
+			}
+			$(fila).find('td:first-child').html(val2);
+			id1 = id1.slice(8);
+			id2 = id2.slice(8);
+			console.log(id1+' '+id2);
+			$.post('expedientes/expedientes/intercambiar', {
+				id1: id1,
+				val2: val2,
+				id2: id2,
+				val1: val1
+			});
+
+			$('#tbl_adjuntos').DataTable().destroy();
+			$('#tbl_adjuntos').dataTable({
+				paging: false,
+				searching: false,
+				responsive: true,
+				language: {"url": "plugins/datatables/spanish.json"},
+				order: [[ 0, "asc" ]]
+				/*"columnDefs": [
+					{
+						"targets": [ 0 ],
+						"visible": false,
+						"searchable": false
+					}
+				],*/
+			});
+		} else {
+			console.log('No puede subir más');
+		}
+	}
+	function bajar(btn){
+		var fila = $(btn).parent().parent();
+		var val1 = $(fila).find('td:first-child').html();
+		var tabla = document.getElementById("tbl_adjuntos");
+		var cant = tabla.rows.length;
+		if (val1 < (cant-1)) {
+			var id1 = $(fila).attr('id');
+			var id2 = 0;
+			var val2 = parseInt(val1)+1;
+			console.log(val1+' '+val2);
+			
+			for(var x=0; x<cant; x++){
+				var row = tabla.rows[x];
+				console.log('asd');
+				if(row.cells[0].innerHTML === val2.toString()){
+					console.log('qwe');
+					row.cells[0].innerHTML = val1;
+					id2 = $(row).attr('id');
+				}
+			}
+			$(fila).find('td:first-child').html(val2);
+			id1 = id1.slice(8);
+			id2 = id2.slice(8);
+			console.log(id1+' '+id2);
+			$.post('expedientes/expedientes/intercambiar', {
+				id1: id1,
+				val2: val2,
+				id2: id2,
+				val1: val1
+			});
+
+			$('#tbl_adjuntos').DataTable().destroy();
+
+			$('#tbl_adjuntos').dataTable({
+				paging: false,
+				searching: false,
+				responsive: true,
+				language: {"url": "plugins/datatables/spanish.json"},
+				order: [[ 0, "asc" ]]
+				/*"columnDefs": [
+					{
+						"targets": [ 0 ],
+						"visible": false,
+						"searchable": false
+					}
+				],*/
+			});
+		} else {
+			console.log('No puede bajar más');
+		}
+	}
 	var archivo_adjunto_id = 0;
 	function solicitar_firma(id) {
 		window.location.href = 'expedientes/archivos_adjuntos/solicitar_firma/' + archivo_adjunto_id + '/' + id;
@@ -26,7 +126,13 @@
 			searching: false,
 			responsive: true,
 			language: {"url": "plugins/datatables/spanish.json"},
-			order: [[1, "desc"]]
+			/*"columnDefs": [
+				{
+					"targets": [ 0 ],
+					"visible": false,
+					"searchable": false
+				}
+			],*/
 		});
 		$("#archivos").fileinput({
 			language: 'es',
@@ -302,30 +408,33 @@
 								</div>
 							</div>
 						<?php endif; ?>
-						<?php if (!$archivado && $expediente->acumulado <= 0): ?>
-							<?php if (($ver_expediente && $editar_caratula && $admin_exp && $imprime_caratula) || $acceso_total): ?>
-								<a class="btn btn-primary btn-margin-bottom" href="expedientes/expedientes/editar/<?php echo $expediente->id; ?>">Editar Carátula</a>
+						<?php if($organigrama == $this->session->userdata('organigrama')): ?>
+							<?php if (!$archivado && $expediente->acumulado <= 0): ?>
+								<?php if (($ver_expediente && $editar_caratula && $admin_exp && $imprime_caratula) || $acceso_total): ?>
+									<a class="btn btn-primary btn-margin-bottom" href="expedientes/expedientes/editar/<?php echo $expediente->id; ?>">Editar Carátula</a>
+								<?php endif; ?>
+									<a class="btn btn-primary btn-margin-bottom" href="expedientes/expedientes/iniciar?anexar=<?php echo $expediente->id; ?>">Anexar</a>
+								<?php if ($expediente->acumulado <= 0 && $admin_exp && $acumular): ?>
+									<a class="btn btn-primary btn-margin-bottom" href="expedientes/expedientes/acumular/<?php echo $expediente->id; ?>">Acumular</a>
+								<?php endif; ?>
+									<a class="btn btn-primary btn-margin-bottom" target="_blank" href="expedientes/expedientes/pdf_caratula/<?php echo $expediente->id; ?>">Carátula</a>
+									<a class="btn btn-primary btn-margin-bottom" target="_blank" href="expedientes/expedientes/pdf_comprobante/<?php echo $expediente->id; ?>">Comprobante</a>
+								<?php if ($ver_expediente || $acceso_total): ?>
+									<a class="btn btn-primary btn-margin-bottom" href="expedientes/expedientes/generar_informe/<?php echo $expediente->id; ?>">Generar Informe</a>
+									<!--<a class="btn btn-primary btn-margin-bottom" href="expedientes/expedientes/generar_informe_infogov/<?php echo $expediente->id; ?>">Informe Infogov</a>-->
+								<?php endif; ?>
 							<?php endif; ?>
-								<a class="btn btn-primary btn-margin-bottom" href="expedientes/expedientes/iniciar?anexar=<?php echo $expediente->id; ?>">Anexar</a>
-							<?php if ($expediente->acumulado <= 0 && $admin_exp && $acumular): ?>
-								<a class="btn btn-primary btn-margin-bottom" href="expedientes/expedientes/acumular/<?php echo $expediente->id; ?>">Acumular</a>
+							<?php if ((($ver_expediente || $archivado) && $imprime_caratula) || $acceso_total): ?>
+								<a class="btn btn-primary btn-margin-bottom" target="_blank" href="expedientes/expedientes/pdf_exportar/<?php echo $expediente->id; ?>">Exportar a PDF</a>
 							<?php endif; ?>
-								<a class="btn btn-primary btn-margin-bottom" target="_blank" href="expedientes/expedientes/pdf_caratula/<?php echo $expediente->id; ?>">Carátula</a>
-								<a class="btn btn-primary btn-margin-bottom" target="_blank" href="expedientes/expedientes/pdf_comprobante/<?php echo $expediente->id; ?>">Comprobante</a>
-							<?php if ($ver_expediente || $acceso_total): ?>
-								<a class="btn btn-primary btn-margin-bottom" href="expedientes/expedientes/generar_informe/<?php echo $expediente->id; ?>">Generar Informe</a>
-								<!--<a class="btn btn-primary btn-margin-bottom" href="expedientes/expedientes/generar_informe_infogov/<?php echo $expediente->id; ?>">Informe Infogov</a>-->
+							<?php if (($ver_expediente && $editar_caratula) || $acceso_total): ?>
+								<a class="btn btn-danger btn-margin-bottom" href="#" data-toggle="modal" data-target="#eliminar_modal">Eliminar</a>
 							<?php endif; ?>
 						<?php endif; ?>
-						<?php if ((($ver_expediente || $archivado) && $imprime_caratula) || $acceso_total): ?>
-							<a class="btn btn-primary btn-margin-bottom" target="_blank" href="expedientes/expedientes/pdf_exportar/<?php echo $expediente->id; ?>">Exportar a PDF</a>
-							
-						<?php endif; ?>
-							<a class="btn btn-primary btn-margin-bottom" target="_blank" href="expedientes/expedientes/visualizar/<?php echo $expediente->id; ?>">Visualizar</a>
-						<?php if (($ver_expediente && $editar_caratula) || $acceso_total): ?>
-							<a class="btn btn-danger btn-margin-bottom" href="#" data-toggle="modal" data-target="#eliminar_modal">Eliminar</a>
-						<?php endif; ?>
-							<a class="btn btn-primary btn-margin-bottom" target="_blank" href="expedientes/expedientes/generar_reporte_pases/<?php echo $expediente->id; ?>">Reporte de pases</a>
+
+						<a class="btn btn-primary btn-margin-bottom" target="_blank" href="expedientes/expedientes/visualizar/<?php echo $expediente->id; ?>">Visualizar</a>
+						
+						<a class="btn btn-primary btn-margin-bottom" target="_blank" href="expedientes/expedientes/generar_reporte_pases/<?php echo $expediente->id; ?>">Reporte de pases</a>
 					</div>
 					<div class="box-footer">
 						<a class="btn btn-default" href="javascript:window.history.back();" title="Volver">Volver</a>
@@ -337,7 +446,7 @@
 						<li class="active"><a href="#one2" data-toggle="tab">Pases (<?php echo empty($pases) ? 0 : count($pases); ?>)</a></li>
 						<li><a href="#two2" data-toggle="tab">Anexos (<?php echo empty($anexos) ? 0 : count($anexos); ?>)</a></li>
 						<li><a href="#three2" data-toggle="tab">Acumulados (<?php echo empty($acumulados) ? 0 : count($acumulados); ?>)</a></li>
-						<?php if ($ver_expediente || $archivado): ?>
+						<?php if ($imprime_caratula): ?>
 							<li><a href="#four2" data-toggle="tab">Archivos Adjuntos (<span id="cantidad_adjuntos"><?php echo empty($adjuntos) ? 0 : count($adjuntos); ?></span>)</a></li>
 						<?php endif; ?>
                                                         <li><a href="#five2" data-toggle="tab">Firmas Pendientes (<?php echo empty($firmas) ? 0 : count($firmas); ?>)</a></li>
@@ -468,6 +577,7 @@
 									<table id="tbl_adjuntos" style="width:100%;" class="table table-hover table-bordered table-condensed">
 										<thead>
 											<tr>
+												<th style="display:none;"></th>
 												<th data-priority="1">Nombre de archivo</th>
 												<th data-priority="2">Fecha</th>
 												<th data-priority="2">Tamaño (apróx.)</th>
@@ -477,23 +587,21 @@
 										<tbody>
 											<?php foreach ($adjuntos as $adjunto): ?>
 												<tr id="adjunto_<?= $adjunto['id'] ?>">
+													<td style="display:none;"><?php echo $adjunto['orden'] ?></td>
 													<td><a target="_blank" href="expedientes/archivos_adjuntos/vista_preliminar/<?php echo $adjunto['id']; ?>"><?php echo $adjunto['nombre']; ?></a></td>
 													<td data-order="<?php echo date_format(new DateTime($adjunto['fecha']), 'YmdHis'); ?>"><?php echo date_format(new DateTime($adjunto['fecha']), 'd/m/Y H:i:s'); ?></td>
 													<td><?php echo number_format($adjunto['tamanio'] / 1024, 2) . ' KB'; ?></td>
 													<td>
-														<a style="width: 100px;" class="btn btn-xs btn-primary" href="expedientes/archivos_adjuntos/ver/<?php echo $adjunto['id']; ?>">Ver</a>
+														<a style="width: 100px;" target="_blank" class="btn btn-xs btn-primary" href="expedientes/archivos_adjuntos/ver/<?php echo $adjunto['id']; ?>">Ver</a>
 														
 														<?php if($adjunto['firma_pendiente'] == '0'): ?>
 															<button style="width: 100px;" type="button" class="btn btn-xs btn-success" data-toggle="modal" data-target="#buscar_usuario_modal" onclick="archivo_adjunto_id =<?php echo $adjunto['id']; ?>;">Solicitar Firma</button>
 															<?php if($pase_id == $adjunto['pase_id']): ?>
-																
 																<button style="width: 100px;" type="button" class="btn btn-xs btn-danger" data-toggle="modal" data-target="#eliminar_adjunto_modal"  onclick="javascript:adjuntoId(<?= $adjunto['id'] ?>)">Eliminar</button>
 															<?php endif;?>
 														<?php endif;?>
-														
-														<?php if($pase_id == $adjunto['pase_id']):?>
-															
-														<?php endif;?>
+														<button class="btn btn-default" onclick="subir(this)" id="btn-subir"><i class="fa fa-arrow-up" aria-hidden="true"></i></button>
+														<button class="btn btn-default" onclick="bajar(this)" id="btn-bajar"><i class="fa fa-arrow-down" aria-hidden="true"></i></button>
 													</td>
 												</tr>
 											<?php endforeach; ?>
@@ -562,7 +670,8 @@
 			<div class="modal-content">
 				<div class="modal-header">
 					<button type="button" class="close" data-dismiss="modal" aria-label="Close">
-						<span aria-hidden="true">×</span></button>
+						<span aria-hidden="true">×</span>
+					</button>
 					<h4 class="modal-title">Seleccionar usuario a solicitar firma</h4>
 				</div>
 				<div class="modal-body">

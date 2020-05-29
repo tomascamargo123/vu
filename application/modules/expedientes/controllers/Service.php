@@ -282,7 +282,20 @@ class Service extends CI_Controller{
             if(sizeof($result) > 0) return;
             //retornamos si hay pendiente hasta que ya no queden firmas en este documento O si
             // la no hay id de pase por que es una solicitud de firma no relacionada a un formulario automatisado
-            $ci->db->simple_query('UPDATE sigmu.expediente SET firma_pendiente = 0 WHERE id = (SELECT archivoadjunto.id_expediente FROM sigmu.archivoadjunto WHERE archivoadjunto.id = '.$id_pdf.')');
+            $cant = $ci->db->query("SELECT COUNT(*) as cant
+            FROM expedientes.firmas_archivos_adjuntos
+            WHERE archivo_adjunto_id IN(SELECT
+            id
+            FROM sigmu.archivoadjunto
+            WHERE id_expediente = (SELECT
+            id_expediente
+            FROM sigmu.archivoadjunto
+            WHERE id = $id_pdf))
+            AND estado = 'Solicitada'")->result_array();
+
+            if($cant[0]['cant'] < 1){
+                $ci->db->simple_query('UPDATE sigmu.expediente SET firma_pendiente = 0 WHERE id = (SELECT archivoadjunto.id_expediente FROM sigmu.archivoadjunto WHERE archivoadjunto.id = '.$id_pdf.')');
+            }
         }
  
         $this->nusoap_server->service(file_get_contents("php://input"));

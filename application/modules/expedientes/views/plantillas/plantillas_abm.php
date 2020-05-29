@@ -77,7 +77,7 @@
 					<div class="box-footer">
 						<a class="btn btn-default" href="javascript:window.history.back();" title="Cancelar">Cancelar</a>
 						<?php echo (!empty($txt_btn)) ? form_submit($data_submit, $txt_btn) : ''; ?>
-						<?php echo ($txt_btn === 'Editar' || $txt_btn === 'Eliminar') ? form_hidden('id', $plantilla->id) : ''; ?>
+						<?php echo ($txt_btn === 'Guardar' || $txt_btn === 'Eliminar') ? form_hidden('id', $plantilla->id) : ''; ?>
 					</div>
 					<?php echo form_close(); ?>
 				</div>

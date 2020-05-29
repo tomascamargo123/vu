@@ -46,6 +46,20 @@ class Oficinas_model extends MY_Model
 		
 		return $result->result_array();
 	}
+
+	public function get_oficinas($organigrama){
+		$query = "SELECT id, nombre FROM sigmu.oficina WHERE organigrama = $organigrama";
+		$result = $this->db->query($query)->result_array();
+		$oficinas = array();
+		foreach($result as $value){
+			$oficinas[$value['id']] = $value['nombre'];
+		}
+		return $oficinas;
+	}
+
+	public function get_ventanillas(){
+		return $this->db->query("select * from sigmu.ventanilla_areas")->result_array();
+	}
 }
 /* End of file Oficinas_model.php */
 /* Location: ./application/modules/expedientes/models/Oficinas_model.php */

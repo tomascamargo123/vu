@@ -13,13 +13,13 @@ class Requerimientos_model extends MY_Model
 		$this->aud_table_name = "{$this->sigmu_schema}_aud.aviso";
 		$this->msg_name = 'Requerimiento';
 		$this->id_name = 'id';
-		$this->columnas = array('id', 'mensaje', 'activo', 'estado', 'importancia', 'usuario', 'detalle', 'solicitante');
+		$this->columnas = array('id', 'mensaje', 'estado', 'importancia', 'usuario', 'detalle', 'solicitante', 'comentario');
 		$this->fields = array(
 			array('name' => 'mensaje', 'label' => 'Mensaje', 'maxlength' => '255'),
 			array('name' => 'detalle', 'label' => 'Detalle', 'form_type' => 'textarea', 'rows' => '4'),
 			array('name' => 'importancia', 'label' => 'Importancia', 'input_type' => 'combo'),
 			array('name' => 'estado', 'label' => 'Estado', 'input_type' => 'combo'),
-			array('name' => 'activo', 'label' => 'Activo', 'input_type' => 'combo')
+			array('name' => 'comentario', 'label' => 'Comentario', 'maxlength' => '255'),
 		);
 		$this->requeridos = array();
 		//$this->unicos = array();

@@ -103,9 +103,21 @@
 										<?php echo $fields['last_login']['form']; ?>
 									</div>
 									<div class="form-group">
+										<?php echo $fields['organigrama']['label']; ?>
+										<?php echo $fields['organigrama']['form']; ?>
+									</div>
+									<div class="form-group">
 										<?php echo $fields['groups']['label']; ?>
 										<?php echo $fields['groups']['form']; ?>
 									</div>
+
+									<!--Código agregado para Ticket Nro 30-->
+									<div class="form-group">
+										<label for="digital">Firma digital: </label>
+										<input type="checkbox" name="firma_digital" id="firma_digital" <?= (($firma_digital > 0) ? 'checked' : '') ?> <?= (($check_firma) ? '' : 'disabled') ?>>
+									</div>
+									<!--Fin Ticket Nro 30-->
+
 								</div>
 								<div class="tab-pane" id="tab_expedientes">
 									<div class="form-group">
@@ -125,7 +137,7 @@
 					<div class="box-footer">
 						<a class="btn btn-default" href="usuarios/listar" title="Cancelar">Cancelar</a>
 						<?php echo (!empty($txt_btn)) ? form_submit($data_submit, $txt_btn) : ''; ?>
-						<?php echo $txt_btn === 'Editar' ? form_hidden('id', $usuario->id) : ''; ?>
+						<?php echo $txt_btn === 'Guardar' ? form_hidden('id', $usuario->id) : ''; ?>
 					</div>
 					<?php echo form_close(); ?>
 				</div>

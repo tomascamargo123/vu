@@ -995,7 +995,7 @@ class Ion_auth_model extends CI_Model
 
 					return FALSE;
 				}
-				$query_zetta = $this->db->select($this->identity_column . ', email, id, password, active, last_login, first_name, last_name, CodiUsua')
+				$query_zetta = $this->db->select($this->identity_column . ', email, id, password, active, last_login, first_name, last_name, CodiUsua, organigrama')
 					->where('CodiUsua', $user_infogov->CodiUsua)
 					->limit(1)
 					->order_by('id', 'desc')
@@ -1016,7 +1016,7 @@ class Ion_auth_model extends CI_Model
 						'audi_fecha' => date_format(new DateTime(), 'Y-m-d H:i:s'),
 						'audi_accion' => 'I'));
 
-					$query_zetta = $this->db->select($this->identity_column . ', email, id, password, active, last_login, first_name, last_name')
+					$query_zetta = $this->db->select($this->identity_column . ', email, id, password, active, last_login, first_name, last_name, organigrama')
 						->where('CodiUsua', $user_infogov->CodiUsua)
 						->limit(1)
 						->order_by('id', 'desc')
@@ -1027,7 +1027,7 @@ class Ion_auth_model extends CI_Model
 				$this->load->model('expedientes/oficinas_model');
 				$oficinas = $this->oficinas_model->get(array(
 					'join' => array(array('table' => "$this->sigmu_schema.usuario_oficina", 'where' => 'usuario_oficina.ID_OFICINA=oficina.id')),
-					'where' => array(array('column' => 'usuario_oficina.ID_USUARIO', 'value' => $user_infogov->CodiUsua)),
+					'where' => array(array('column' => 'usuario_oficina.ID_USUARIO', 'value' => $user_infogov->CodiUsua), array('column' => 'oficina.organigrama', 'value' => $user->organigrama)),
                                         'sort_by' => "$this->sigmu_schema.usuario_oficina.ORDEN")
 				);
 				if (!empty($oficinas))
@@ -1824,7 +1824,8 @@ class Ion_auth_model extends CI_Model
 		    'oficina_actual_id'    => isset($user->oficina_actual_id) ? $user->oficina_actual_id : '',
 		    'CodiUsua'    => isset($user->CodiUsua) ? $user->CodiUsua : '',
 		    'last_login'		   => time(),
-                    'inicia_expediente' => isset($user->inicia_expediente) ? $user->inicia_expediente : '',
+			'inicia_expediente' => isset($user->inicia_expediente) ? $user->inicia_expediente : '',
+			'organigrama' 		   => $user->organigrama,
 		);
                     
                 $groups = array();

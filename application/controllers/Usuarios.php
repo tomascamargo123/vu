@@ -56,6 +56,7 @@ class Usuarios extends MY_Controller
 				->join('users', "$this->sigmu_schema.usuario.CodiUsua = users.CodiUsua", 'left')
 				->join('users_groups', 'users_groups.user_id = users.id', 'left')
 				->join('groups', 'groups.id = users_groups.group_id', 'left')
+				->where('users.organigrama', $this->session->userdata('organigrama'))
 				->group_by('usuario.CodiUsua')
 				->add_column('edit', '<a href="usuarios/ver/$1" title="Administrar"><i class="fa fa-cogs"></i></a>', 'CodiUsua');
 
@@ -264,9 +265,8 @@ class Usuarios extends MY_Controller
 					}
 				}
 			}
-
 			$data['usuario'] = $usuario;
-			$data['txt_btn'] = 'Editar';
+			$data['txt_btn'] = 'Guardar';
 			$data['class'] = array('agregar' => '', 'ver' => '', 'editar' => 'active btn-app-zetta-active', 'eliminar' => '');
 			$data['title'] = TITLE . ' - Editar usuario';
 			$this->load_template('usuarios/usuarios_abm', $data);
@@ -443,6 +443,7 @@ class Usuarios extends MY_Controller
 			$current_exp_oficinas = array();
 			$array_active = array('1' => 'Activo', '0' => 'Inactivo');
 			$array_groups = $this->get_array('Grupos', 'name');
+			$array_organigrama = array('10000' => 'Ejecutivo', '20000' => 'HCD');
 			$this->load->model('reclamos/grupos_r_model');
 			$array_rec_grupos = $this->get_array('grupos_r', 'nombre');
 			$this->load->model('expedientes/oficinas_model');
@@ -520,6 +521,11 @@ class Usuarios extends MY_Controller
 				}
 			}
 
+			#Código agregado para Ticket Nro 30
+			$data['firma_digital'] = $this->Usuarios_model->es_firmante($this->session->userdata('CodiUsua'));
+			$data['check_firma'] = FALSE;
+			#Fin Ticket Nro 30
+
 			$data['usuario'] = $usuario;
 			$data['txt_btn'] = NULL;
 			$data['class'] = array('agregar' => '', 'ver' => 'active btn-app-zetta-active', 'editar' => '', 'eliminar' => '');
@@ -575,8 +581,9 @@ class Usuarios extends MY_Controller
 					'sort_by'=>'ORDEN')
 					);
 			$this->load->model('expedientes/oficinas_model');
-			$this->array_exp_oficinas_control = $array_exp_oficinas = $this->get_array('oficinas', 'nombre');
+			$this->array_exp_oficinas_control = $array_exp_oficinas = $this->oficinas_model->get_oficinas($this->session->userdata('organigrama'));
 			$this->array_active_control = $array_active = array('1' => 'Activo', '0' => 'Inactivo');
+			$this->array_organigrama_control = $array_organigrama = array('10000' => 'Ejecutivo', '20000' => 'HCD');
 			$this->set_model_validation_rules($this->Usuarios_model);
 			$error_msg = FALSE;
 			$primer_oficina = $this->oficinas_usuarios_model->get_primer_oficina($CodiUsua);
@@ -599,6 +606,8 @@ class Usuarios extends MY_Controller
 						'first_name' => $this->input->post('first_name'),
 						'last_name' => $this->input->post('last_name'),
 						'email' => $this->input->post('email'),
+						'firma_digital' => ($this->input->post('firma_digital') == 'on' ? 1 : 0),
+						'organigrama' => $this->input->post('organigrama'),
 						'id' => $usuario->id
 					);
                                         
@@ -760,8 +769,13 @@ class Usuarios extends MY_Controller
 				}
 			}
 
+			#Código agregado para Ticket Nro 30
+			$data['firma_digital'] = $this->Usuarios_model->es_firmante($this->session->userdata('CodiUsua'));
+			$data['check_firma'] = TRUE;
+			#Fin Ticket Nro 30
+
 			$data['usuario'] = $usuario;
-			$data['txt_btn'] = 'Editar';
+			$data['txt_btn'] = 'Guardar';
 			$data['class'] = array('agregar' => '', 'ver' => '', 'editar' => 'active btn-app-zetta-active', 'eliminar' => '');
 			$data['title'] = TITLE . ' - Editar usuario';
 			$data['css'][] = 'plugins/kartik-v-bootstrap-tabs-x/css/bootstrap-tabs-x.min.css';

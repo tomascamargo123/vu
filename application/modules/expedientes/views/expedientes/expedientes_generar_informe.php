@@ -1,7 +1,7 @@
 <script>
 	var plantillas_table;
 	function seleccionar_plantilla(id) {
-		window.location.replace('expedientes/expedientes/generar_informe/<?php echo $expediente->id; ?>/<?php echo $ultimo_pase[0]->id; ?>/' + id);
+		window.location.replace('expedientes/expedientes/generar_informe/<?php echo $expediente->id; ?>/<?php echo $ultimo_pase; ?>/' + id);
 	}
 	$(document).ready(function() {
 <?php if (!empty($plantilla)): ?>
@@ -89,7 +89,7 @@
 								</div>
 							<?php endif; ?>							
 						</div>
-						<!--<button type="button" class="btn btn-primary" onclick="javascript:agregarFirmas()">Agregar firmas</button>-->
+						<button type="button" class="btn btn-primary" onclick="javascript:agregarFirmas()">Agregar firmas</button>
 					</div>
 					<?php if($firma_pad > 0) { ?>
                             <div id="form_pad_sign" style="padding: 10px;">

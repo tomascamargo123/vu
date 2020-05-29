@@ -45,6 +45,7 @@ class Usuarios extends MY_Controller
 			->from("users")
 			->where('CodiUsua IS NOT NULL')
 			->where('firma_digital',true)
+			->where('organigrama', $this->session->userdata('organigrama'))
 			->add_column('select', '<a data-dismiss="modal" href="$1" onclick="solicitar_firma($1);" title="Solicitar Firma"><i class="fa fa-check"></i></a>', 'id');
 
 		echo $this->datatables->generate();

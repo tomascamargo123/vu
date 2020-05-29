@@ -144,7 +144,7 @@ class Grupos extends MY_Controller {
 			}
 
 			$data['grupo'] = $grupo;
-			$data['txt_btn'] = 'Editar';
+			$data['txt_btn'] = 'Guardar';
 			$data['class'] = array('agregar' => '', 'ver' => '', 'editar' => 'active btn-app-zetta-active', 'eliminar' => '');
 			$data['title'] = TITLE . ' - Editar grupo';
 			$this->load_template('grupos/grupos_abm', $data);

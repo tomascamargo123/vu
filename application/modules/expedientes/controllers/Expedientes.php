@@ -17,7 +17,7 @@ class Expedientes extends MY_Controller
 		$this->grupos_acceso_especial = array('admin');
 		$this->grupos_acceso_especial_reducido = array('admin', 'expedientes_admin');
 		$this->grupos_permitidos = array('admin', 'expedientes_admin', 'expedientes_supervision', 'expedientes_usuario', 'expedientes_consulta_general');
-		$this->grupos_admin = array('admin', 'expedientes_admin', 'expedientes_supervision', 'expedientes_consulta_general');
+		$this->grupos_admin = array('admin');
 		$this->grupos_solo_consulta = array('expedientes_consulta_general');
                 $this->grupos_iniciar_exp = array(862,1);
 	}
@@ -108,7 +108,8 @@ class Expedientes extends MY_Controller
 			->unset_column('expediente.id')
 			->exact_where_column('ano,numero,anexo')
 			->from("$this->sigmu_schema.expediente")
-			->join("$this->sigmu_schema.tramite", 'tramite.id = expediente.tramite_id', 'left');
+			->join("$this->sigmu_schema.tramite", 'tramite.id = expediente.tramite_id', 'left')
+			->join("expedientes.users", 'expediente.usuario = users.username', 'join');
 		if($data != ""){
 			$query = json_decode($data, TRUE);
 			foreach($query as $q){
@@ -120,11 +121,12 @@ class Expedientes extends MY_Controller
 			}
 		}
 		$this->datatables
+			->where('expediente.ano', date("Y"))
 			->add_column('opciones', '$1', 'id')
 			->add_column('select', '<a data-dismiss="modal" style="width: 100px;" href="" onclick="seleccionar_expediente(\'$1\',\'$2\',\'$3\',\'$4\');" title="Seleccionar"><i class="fa fa-check"></i></a>', 'numero, ano, anexo, nuevo_anexo')
 			->add_column('acumular', '<a style="width: 100px;" href="javascript:acumular_expediente(\'$1\',\'$2\',\'$3\',\'$4\');" title="Acumular"><i class="fa fa-check"></i></a>', 'id, numero, ano, anexo');
 		if($data == ""){
-			$this->datatables->set_limit(10);
+			//$this->datatables->set_limit(10);
 		}
 		
 		echo $this->datatables->generate();
@@ -251,7 +253,9 @@ class Expedientes extends MY_Controller
 			->exact_where_column('ano,numero,anexo')
 			->from("$this->sigmu_schema.expediente")
 			->join("$this->sigmu_schema.tramite", 'tramite.id = expediente.tramite_id', 'left')
-			->where('acumulado >', '0');
+			->join("expedientes.users", 'expediente.usuario = users.username', 'join')
+			->where('acumulado >', '0')
+			->where('users.organigrama = '.$this->session->userdata('organigrama'));
 			if($data != ""){
 				$query = json_decode($data, TRUE);
 				foreach($query as $q){
@@ -335,6 +339,12 @@ class Expedientes extends MY_Controller
 				$_POST['columns'][4]['search']['value'] = '';
 			}
 		}
+		$archivo = '';
+		if($this->session->userdata('organigrama') == '10000'){
+			$archivo = '1';
+		} else {
+			$archivo = '2001';
+		}
 		$this->datatables
 			->select('expediente.id, expediente.ano, expediente.numero, expediente.anexo, tramite.nombre as tramite_nombre, expediente.inicio, expediente.fojas, expediente.caratula, expediente.objeto, expediente.acumulado, pase.id as pase_id')
 			->unset_column('expediente.id')
@@ -342,7 +352,9 @@ class Expedientes extends MY_Controller
 			->from("$this->sigmu_schema.expediente")
 			->join("$this->sigmu_schema.tramite", 'tramite.id = expediente.tramite_id', 'left')
 			->join("$this->sigmu_schema.pase", 'pase.id_expediente = expediente.id')
-			->where('pase.origen', '1')
+			->join("expedientes.users", 'expediente.usuario = users.username', 'join')
+			->where('pase.origen', $archivo)
+			->where('users.organigrama = '.$this->session->userdata('organigrama'))
 			->where('pase.destino', '-1');
 			if($data != ""){
 				$query = json_decode($data, TRUE);
@@ -472,7 +484,7 @@ class Expedientes extends MY_Controller
 		}	
 		$this->array_tipo_ayuda_social_control = $array_tipo_ayuda_social = $this->get_array('tipos_ayudas_sociales', 'nombre', 'id', null, array(0 => '-- Seleccionar tipo de ayuda --'));
 		unset($this->array_tipo_ayuda_social_control[0]);
-		$this->array_tipo_tramite_control = $array_tipo_tramite = array(0 => '-- Seleccionar tipo --', 'I' => 'Interno', 'E' => 'Externo');
+		$this->array_tipo_tramite_control = $array_tipo_tramite = array(0 => '-- Seleccionar tipo --', 'I' => 'Interno', 'E' => 'Externo', 'ID' => 'Interno Digital', 'ED' => 'Externo Digital');
 		$this->array_tramite_control = $this->get_array('tramites', 'nombre');
 		$array_tramite = array(0 => '-- Seleccionar trámite --');
 		$this->set_model_validation_rules($this->expedientes_model);
@@ -1021,7 +1033,7 @@ class Expedientes extends MY_Controller
 
 		$data['expediente'] = $expediente;
 		//var_dump($expediente);die();
-
+		$data['id_expediente'] = $id;
 		$data['txt_btn'] = 'Guardar';
 		$data['class'] = array('agregar' => '', 'ver' => '', 'editar' => 'active btn-app-zetta-active', 'eliminar' => '', 'adjuntos' => '');
 		$data['title'] = 'Expedientes - Expedientes - Modificar';
@@ -1218,7 +1230,7 @@ class Expedientes extends MY_Controller
 		));
 		$this->load->model('expedientes/archivos_adjuntos_model');
 		$data['adjuntos'] = $this->archivos_adjuntos_model->get_adjuntos($expediente->id);
-                //var_dump($data['adjuntos']);die();
+    	//var_dump($data['adjuntos']);die();
 
 		$tableData_usuarios = array(
 			'columns' => array(
@@ -1265,9 +1277,7 @@ class Expedientes extends MY_Controller
 		$imprime_caratula = false;
 		$sitioDeExpediente = $this->expedientes_model->sitioDeExpediente($id);
 		if($sitioDeExpediente[0]['origen'] == $this->session->userdata('oficina_actual_id')){
-			if($this->expedientes_model->iniciaExpediente($this->session->userdata('oficina_actual_id'))){
-				$imprime_caratula = true;
-			}
+			$imprime_caratula = true;
 		} else {
 			$imprime_caratula = false;
 		}
@@ -1283,7 +1293,6 @@ class Expedientes extends MY_Controller
 		}
 		else
 		{
-			#monica de secretaria, impresora. Nora, estudio contable, fabian.
 			if($this->expedientes_model->iniciaExpediente($this->session->userdata('oficina_actual_id'))){
 				$data['ver_expediente'] = TRUE;
 			} else {
@@ -1304,6 +1313,7 @@ class Expedientes extends MY_Controller
 				'respuesta = "pendiente"'
 			)
 		))[0]->id;
+		$data['organigrama'] = $this->expedientes_model->getExpedienteOrg($id);
 		$data['ver_expediente'] = TRUE;
 		$data['pase_id'] = $pase_id;
 		$data['imprime_caratula'] = $imprime_caratula;
@@ -1600,12 +1610,8 @@ class Expedientes extends MY_Controller
 			}
 		}
 		$this->load->model('expedientes/pases_model');
-		$ultimo_pase = $this->pases_model->get(array(
-			'select' => 'id',
-			'id_expediente' => $expediente->id,
-			'sort_by' => 'id desc',
-			'limit' => '1'
-		));
+		$ultimo_pase = $this->pases_model->getIdUltimoPase($id);
+
 		$expediente = $this->expedientes_model->get(array(
 			'id' => $id,
 			'join' => array(
@@ -2449,22 +2455,23 @@ class Expedientes extends MY_Controller
 				}
 			}
 		}*/
-		$expediente = $this->expedientes_model->get(array(
-			'id' => $id,
-			'join' => array(
-				array(
-					'table' => "$this->sigmu_schema.tramite",
-					'where' => 'tramite.id=expediente.tramite_id',
-					'columnas' => array('tramite.nombre as tramite')
-				),
-				array(
-					'type' => 'left',
-					'table' => "$this->sigmu_schema.expediente em",
-					'where' => 'em.id=expediente.acumulado',
-					'columnas' => array('em.numero as madre_numero', 'em.ano as madre_ano', 'em.anexo as madre_anexo')
+			$expediente = $this->expedientes_model->get(array(
+				'id' => $id,
+				'join' => array(
+					array(
+						'table' => "$this->sigmu_schema.tramite",
+						'where' => 'tramite.id=expediente.tramite_id',
+						'columnas' => array('tramite.nombre as tramite')
+					),
+					array(
+						'type' => 'left',
+						'table' => "$this->sigmu_schema.expediente em",
+						'where' => 'em.id=expediente.acumulado',
+						'columnas' => array('em.numero as madre_numero', 'em.ano as madre_ano', 'em.anexo as madre_anexo')
+					)
 				)
-			)
-		));
+			));
+
 		if (empty($expediente))
 		{
 			show_404();
@@ -2478,7 +2485,21 @@ class Expedientes extends MY_Controller
 			redirect("expedientes/expedientes/ver/$id");
 		}*/
 		$this->load->model('expedientes/archivos_adjuntos_model');
-		$adjuntos_pdf = $this->archivos_adjuntos_model->get(array('id_expediente' => $expediente->id, 'tipodecontenido' => 'application/pdf', 'sort_by' => 'id'));
+		$sitioDeExpediente = $this->expedientes_model->sitioDeExpediente($id);
+		if(in_groups($this->grupos_admin, $this->grupos) || $sitioDeExpediente[0]['origen'] == $this->session->userdata('oficina_actual_id')){
+			$adjuntos_pdf = $this->archivos_adjuntos_model->get(array(
+				'id_expediente' => $expediente->id, 
+				'tipodecontenido' => 'application/pdf',
+				'sort_by' => 'orden'
+			));
+		} else {
+			$adjuntos_pdf = $this->archivos_adjuntos_model->get(array(
+				'id_expediente' => $expediente->id, 
+				'tipodecontenido' => 'application/pdf',
+				'id <=' => $this->expedientes_model->adjunto_firmado($this->session->userdata('user_id'), $id),
+				'sort_by' => 'orden'
+			));
+		}
 		$this->load->library('pdf');
                 $pdf = $this->pdf->load();
 		require_once _MPDF_PATH . 'vendor/setasign/fpdi/fpdi_pdf_parser.php';
@@ -2532,6 +2553,138 @@ class Expedientes extends MY_Controller
 									"$firma->usuario_nombre<br/>$firma->usuario_apellido<br/>$firma->cargo<br/>" .
 									date_format(new DateTime($firma->fecha_firma), 'd/m/y H:i:s') .
 									'</div>');
+								$i_firma++;
+							}
+						}
+					}
+				}
+			}
+		}
+		$this->session->set_userdata("pdf_$id", $paginas);
+		$pdf->Output("Expediente_{$expediente->numero}-{$expediente->ano}-{$expediente->anexo}.pdf", $dest_type);
+	}
+
+	public function pdf_exportar_con_firma($id = NULL, $dest_type = 'I')
+	{
+		if (!in_groups($this->grupos_permitidos, $this->grupos) || $id == NULL || !ctype_digit($id) || !in_array($dest_type, array('I', 'D')))
+		{
+			show_error('No tiene permisos para la acción solicitada', 500, 'Acción no autorizada');
+		}
+		/*if($dest_type == 'I'){
+			if(in_groups($this->grupos_acceso_especial)){
+				$sitioDeExpediente = $this->expedientes_model->sitioDeExpediente($id);
+				if($sitioDeExpediente[0]['origen'] == $this->session->userdata('oficina_actual_id')){
+					if(!$this->expedientes_model->iniciaExpediente($this->session->userdata('oficina_actual_id'))){
+						$this->session->set_flashdata('error', 'No tiene permiso para imprimir la carátula');
+						redirect("expedientes/expedientes/ver/$id", 'refresh');
+					}
+				} else {
+					$this->session->set_flashdata('error', 'El expediente no se encuentra en su oficina');
+					redirect("expedientes/expedientes/ver/$id", 'refresh');
+				}
+			}
+		}*/
+			$expediente = $this->expedientes_model->get(array(
+				'id' => $id,
+				'join' => array(
+					array(
+						'table' => "$this->sigmu_schema.tramite",
+						'where' => 'tramite.id=expediente.tramite_id',
+						'columnas' => array('tramite.nombre as tramite')
+					),
+					array(
+						'type' => 'left',
+						'table' => "$this->sigmu_schema.expediente em",
+						'where' => 'em.id=expediente.acumulado',
+						'columnas' => array('em.numero as madre_numero', 'em.ano as madre_ano', 'em.anexo as madre_anexo')
+					)
+				)
+			));
+
+		if (empty($expediente))
+		{
+			show_404();
+		}
+		$oficina = $this->expedientes_model->get_oficina($id);
+                $this->load->model('expedientes/firmas_archivos_adjuntos_model');
+                $firma_pendiente =  $this->firmas_archivos_adjuntos_model->tieneFirmaPendiente($id, $this->session->userdata('user_id'));
+		/*if (($oficina !== $this->session->userdata('oficina_actual_id') && !$firma_pendiente) && !in_groups($this->grupos_admin, $this->grupos))
+		{
+			$this->session->set_flashdata('error', 'No puede exportar expedientes que no estén en su oficina');
+			redirect("expedientes/expedientes/ver/$id");
+		}*/
+		$this->load->model('expedientes/archivos_adjuntos_model');
+		$sitioDeExpediente = $this->expedientes_model->sitioDeExpediente($id);
+		if(in_groups($this->grupos_admin, $this->grupos) || $sitioDeExpediente[0]['origen'] == $this->session->userdata('oficina_actual_id')){
+			$adjuntos_pdf = $this->archivos_adjuntos_model->get(array(
+				'id_expediente' => $expediente->id, 
+				'tipodecontenido' => 'application/pdf',
+				'sort_by' => 'id'
+			));
+		} else {
+			$adjuntos_pdf = $this->archivos_adjuntos_model->get(array(
+				'id_expediente' => $expediente->id, 
+				'tipodecontenido' => 'application/pdf',
+				'id <=' => $this->expedientes_model->adjunto_firmado($this->session->userdata('user_id'), $id),
+				'sort_by' => 'id'
+			));
+		}
+		$this->load->library('pdf');
+                $pdf = $this->pdf->load();
+		require_once _MPDF_PATH . 'vendor/setasign/fpdi/fpdi_pdf_parser.php';
+		$pdf->SetImportUse();
+		$html = $this->load->view('expedientes/expedientes/expedientes_pdf_caratula', array('expediente' => $expediente), true);
+		$pdf->WriteHTML($html); // write the HTML into the PDF
+		$pagina = 1;
+		$paginas = array("$pagina" => 'Caratula');
+		if (!empty($adjuntos_pdf))
+		{
+			$this->load->model('expedientes/firmas_archivos_adjuntos_model');
+			foreach ($adjuntos_pdf as $adjunto_pdf)
+			{
+				$pagina++;
+				$paginas["$pagina"] = substr($adjunto_pdf->nombre, 0, -4);
+				$pagina--;
+				$tmp_file = tempnam('tmp', 'tmp');
+				file_put_contents($tmp_file, $adjunto_pdf->contenido);
+				$pagecount = $pdf->SetSourceFile($tmp_file);
+				$firmas_adjunto = $this->firmas_archivos_adjuntos_model->get_firmas($adjunto_pdf->id);
+				if (!empty($firmas_adjunto))
+				{
+					foreach ($firmas_adjunto as $firma)
+					{
+						if (isset($firma->firma))
+						{
+							$firma->valida = openssl_verify($adjunto_pdf->contenido, base64_decode($firma->firma), $firma->public_key, OPENSSL_ALGO_SHA256);
+						}
+					}
+				}
+				for ($i = 1; $i <= $pagecount; $i++)
+				{
+					$pagina++;
+					$pdf->AddPage();
+					$import_page = $pdf->ImportPage($i);
+					$pdf->UseTemplate($import_page);
+					$pdf->WriteHTML('<div style="position:absolute;top:83px;width:80px;float:right;right:57px;text-align:center;font-size:24px">' . ($pagina - 1) . '</div>');
+					$pdf->WriteHTML('<img style="position:absolute; float:right;" src="img/expedientes/folio.png"/>');
+					
+
+					if (!empty($firmas_adjunto))
+					{
+						$i_firma = 0;
+						foreach ($firmas_adjunto as $firma)
+						{
+							if (isset($firma->firma) && $firma->valida)
+							{
+								if (!isset($firma->cargo))
+								{
+									$firma->cargo = '';
+								}
+								$pdf->WriteHTML('<div style="background-repeat:no-repeat;background-position:center;background-image:url(\'img/expedientes/firma.png\');font-family:\'courier\';font-weight:bold;float:left;position:absolute;top:1015px;left:' . (50 + $i_firma * 150) . 'px;width:150px;text-align:center;font-size:10px;">' .
+									"$firma->usuario_nombre<br/>$firma->usuario_apellido<br/>$firma->cargo<br/>" .
+									date_format(new DateTime($firma->fecha_firma), 'd/m/y H:i:s') .
+									'</div>');
+								$pdf->WriteHTML('<p style="position:absolute; bottom:0; left: 0; width:100px; margin-left: 15px;"><h3>Firma</h3><h6>Claudio Diaz</h6></p>');
 								$i_firma++;
 							}
 						}
@@ -2610,13 +2763,19 @@ class Expedientes extends MY_Controller
 			show_error('No tiene permisos para la acción solicitada', 500, 'Acción no autorizada');
 		}
 		$oficina = $this->expedientes_model->get_oficina($id);
-                $this->load->model('expedientes/firmas_archivos_adjuntos_model');
-                $firma_pendiente =  $this->firmas_archivos_adjuntos_model->tieneFirmaPendiente($id, $this->session->userdata('user_id'));
-		if (($oficina !== $this->session->userdata('oficina_actual_id') && !$firma_pendiente) && !in_groups($this->grupos_admin, $this->grupos))
-		{
-			//$this->session->set_flashdata('error', 'No puede visualizar expedientes que no estén en su oficina');
-			//redirect("expedientes/expedientes/ver/$id");
+		$firma_digital = $this->expedientes_model->firma_digital($this->session->userdata('user_id'), $id);
+		$this->load->model('expedientes/firmas_archivos_adjuntos_model');
+		$firma_pendiente =  $this->firmas_archivos_adjuntos_model->tieneFirmaPendiente($id, $this->session->userdata('user_id'));
+		
+		if(!in_groups($this->grupos_admin, $this->grupos)){
+			if(!$firma_digital){
+				if ($oficina !== $this->session->userdata('oficina_actual_id')){
+					$this->session->set_flashdata('error', 'No puede visualizar expedientes que no estén en su oficina');
+					redirect("expedientes/expedientes/ver/$id");
+				}
+			}
 		}
+
 		$data['expediente_id'] = $id;
 		$this->load->view('expedientes/expedientes/expedientes_visualizar', $data);
 	}
@@ -2665,6 +2824,55 @@ class Expedientes extends MY_Controller
 		if($expediente->idgital == 0) $pdf = $this->pdf->load('','LEGAL');
 		$pdf->WriteHTML($html);
 		$pdf->Output("pases_{$expediente->numero}_{$expediente->ano}_{$expediente->anexo}.pdf", 'I');
+	}
+
+	public function intercambiar(){
+		$id1 = $this->input->post('id1');
+		$val2 = $this->input->post('val2');
+		$id2 = $this->input->post('id2');
+		$val1 = $this->input->post('val1');
+
+		if($id1 == NULL || $id2 == NULL){
+			show_404();
+		} else {
+			$this->load->model('expedientes/archivos_adjuntos_model');
+
+			$this->archivos_adjuntos_model->update(array(
+				'id' => $id1,
+				'orden' => $val2
+			));
+			$this->archivos_adjuntos_model->update(array(
+				'id' => $id2,
+				'orden' => $val1
+			));
+
+			echo $id1.' es ahora el  número '.$val2;
+			echo $id2.' es ahora el  número '.$val1;
+		}
+	}
+
+	public function enviar_a_resolucion($id = NULL){
+		if($id == NULL){
+			show_404();
+		} else {
+			if (isset($_POST) && !empty($_POST))
+			{		
+				if ($this->form_validation->run() === TRUE)
+				{
+					$trans_ok = TRUE;
+					$trans_ok&= $this->expedientes_model->update(array(
+						'id' => $id,
+						'destino' => '-3',
+						'respuesta' => 'aresolver',
+					));
+					if ($trans_ok)
+					{
+						$this->session->set_flashdata('message', $this->oficinas_model->get_msg());
+						redirect('expedientes/expedientes/listar', 'refresh');
+					}
+				}
+			}
+		}
 	}
 }
 /* End of file Expedientes.php */

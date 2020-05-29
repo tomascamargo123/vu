@@ -284,7 +284,7 @@
 						<?php endif; ?>
 					</div>
 					<div class="box-footer">
-						<a class="btn btn-default" href="expedientes/expedientes/listar" title="Cancelar">Cancelar</a>
+						<a class="btn btn-default" href="expedientes/expedientes/ver/<?php echo $id_expediente ?>" title="Cancelar">Cancelar</a>
 						<?php echo (!empty($txt_btn)) ? form_submit($data_submit, $txt_btn) : ''; ?>
 						<?php echo ($txt_btn === 'Guardar' || $txt_btn === 'Eliminar') ? form_hidden('id', $expediente->id) : ''; ?>
 					</div>

@@ -195,6 +195,37 @@ class Expedientes_model extends MY_Model {
         }
     }
 
+    public function firma_digital($user_id, $id){
+        $query = $this->db->query("SELECT COUNT(*) as cant
+        from expedientes.firmas_archivos_adjuntos
+        where firmas_archivos_adjuntos.usuario_id = $user_id and firmas_archivos_adjuntos.archivo_adjunto_id in(select
+        id
+        from sigmu.archivoadjunto
+        where id_expediente = $id) and (estado = 'Realizada' OR estado = 'Solicitada')");
+        if($query->result_array()[0]['cant'] > 0){
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    public function adjunto_firmado($user_id, $id){
+        $query = $this->db->query("SELECT archivo_adjunto_id
+        from expedientes.firmas_archivos_adjuntos
+        where firmas_archivos_adjuntos.usuario_id = $user_id and firmas_archivos_adjuntos.archivo_adjunto_id in(select
+        id
+        from sigmu.archivoadjunto
+        where id_expediente = $id) and (estado = 'Realizada' OR estado = 'Solicitada')
+        ORDER BY id DESC 
+        LIMIT 1");
+        return $query->result_array()[0]['archivo_adjunto_id'];
+    }
+
+    public function getExpedienteOrg($id){
+        $query = "SELECT oficina.organigrama FROM sigmu.pase JOIN sigmu.oficina ON pase.origen = oficina.id WHERE id_expediente = $id";
+        $result = $this->db->query($query)->result_array();
+        return $result[0]['organigrama'];
+    }   
 }
 
 /* End of file Expedientes_model.php */

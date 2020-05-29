@@ -144,7 +144,7 @@ class Plantillas extends MY_Controller {
         }
         $data['plantilla'] = $plantilla;
 
-        $data['txt_btn'] = 'Editar';
+        $data['txt_btn'] = 'Guardar';
         $data['class'] = array('agregar' => '', 'ver' => '', 'editar' => 'active btn-app-zetta-active', 'eliminar' => '', 'formulario' => 'disabled', 'vista_previa' => 'disabled');
         $data['title'] = 'Expedientes - Plantillas - Editar';
         $this->load_template('expedientes/plantillas/plantillas_abm', $data);

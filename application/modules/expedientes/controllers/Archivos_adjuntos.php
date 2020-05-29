@@ -1,10 +1,9 @@
 <?php
 
 defined('BASEPATH') OR exit('No direct script access allowed');
-
 class Archivos_adjuntos extends MY_Controller
 {
-
+	
 	function __construct()
 	{
 		parent::__construct();
@@ -307,100 +306,128 @@ class Archivos_adjuntos extends MY_Controller
 		echo $firma->firma;
 		exit;
 	}
-        public function download_jnlp($id = null, $id_firma = null){
-                //var_dump($this->session->userdata());die();
-            if (!in_groups($this->grupos_permitidos, $this->grupos) || $id == NULL || !ctype_digit($id))
-            {
-                    show_error('No tiene permisos para la acción solicitada', 500, 'Acción no autorizada');
-            }
-            $archivo_adjunto = $this->archivos_adjuntos_model->get(array('id' => $id));
-            if (empty($archivo_adjunto))
-            {
-                    show_404();
-            }
-            //Impide firmar un documento que no este en la oficina
-            /*$oficina = $this->expedientes_model->get_oficina($archivo_adjunto->id_expediente);
-            if ($oficina !== $this->session->userdata('oficina_actual_id') && !in_groups($this->grupos_admin, $this->grupos))
-            {
-                    $this->session->set_flashdata('error', 'No puede firmar adjuntos de expedientes que no estén en su oficina');
-                    redirect("expedientes/expedientes/ver/$archivo_adjunto->id_expediente");
-            }*/
-            $this->load->model('perfil_model');
+
+        public function confirmar_firma(){
+			$this->session->set_userdata('firma_valida', FALSE);
+			$this->load->model('perfil_model');
             $usuario = $this->perfil_model->get(array('id' => $this->session->userdata('user_id')));
             if (empty($usuario))
             {
-                    show_404();
-            }
-            $this->load->model('firmas_archivos_adjuntos_model');
-            $cant = $this->firmas_archivos_adjuntos_model->get_cant_pendientes($id);
-            $posX = 100;
-            switch ($cant){
-                case 1:
-                    $posX = 10;
-                    break;
-                case 2:
-                    $posX = 200;
-                    break;
-                case 3:
-                    $posX = 400;
-                    break;
-                default :
-                    $posX = 50;
-                    break;
-            }
-            $momento = date('_Ymd_His');
-            $jnlp_string = '<?xml version="1.0" encoding="utf-8"?>'
-                                .'<jnlp spec="1.0+" codebase="'.  base_url().'/jnlp_temp/" href="launch'.$momento.'.jnlp">'
-                                    .'<information>'
-                                        .'<title>Firma Online Java</title>'
-                                        .'<vendor>Encode S.A.</vendor>'
-                                        .'<homepage href="'.  base_url().'" />'
-                                    .'</information>'
-                                    .'<update check="always" policy="always"/>'
-                                    .'<security>'
-                                      .'<all-permissions/>'
-                                    .'</security>'
-                                    .'<resources>'
-                                      .'<!-- Application Resources -->'
-                                      .'<j2se version="1.7+" href="http://java.sun.com/products/autodl/j2se"/>'
-                                      .'<jar href="'.  base_url().'/jars/JPDFSigner-0.1.jar" main="true" />'
-                                      .'<jar href="'.  base_url().'/jars/iText-5.0.6.jar" />'
-                                      .'<jar href="'.  base_url().'/jars/log4j-1.2.15.jar" />'
-                                      .'<jar href="'.  base_url().'/jars/bcprov-jdk14-138.jar" />'
-                                      .'<jar href="'.  base_url().'/jars/axis.jar" />'
-                                      .'<jar href="'.  base_url().'/jars/javax.wsdl_1.6.2.v201005080631.jar" />'
-                                      .'<jar href="'.  base_url().'/jars/jaxrpc.jar" />'
-                                      .'<jar href="'.  base_url().'/jars/org.apache.commons.logging_1.0.4.v201005080501.jar" />'
-                                      .'<jar href="'.  base_url().'/jars/saaj.jar" />'
-                                    .'</resources>'
-                                    .'<applet-desc documentBase="'.  base_url().'" name="Firm.ar.J" main-class="com.jpdf.signer.FormMain" width="1" height="1">'
-                                    .'<param name="posX" value="'.$posX.'" />'
-                                    .'<param name="posY" value="100" />'
-                                    .'<param name="pagina" value="ultima" />'
-                                    .'<param name="urlWs" value="'.  base_url().'/expedientes/service/" />'
-                                    .'<param name="OthersParamsValue" value="id;'.$id.'" />'
-                                    .'<param name="certHash" value="" />'
-                                    .'<param name="reasonOptions" value="Firma en conformidad;Firma con protesto" />'//Revisión del documento;Aprobación del documento;Desaprobación del documento
-                                    .'<param name="URLVirtualToken" value="" />'
-                                    .'<param name="minpasswordlength" value="" />'
-                                    .'<param name="Permissions" value="all-permissions" />'
-                                    .'<param name="JNLPname" value="launch'.$momento.'.jnlp" />'
-                                  .'</applet-desc>'
-                                .'</jnlp>';
-            $array = array(
-                'pdf_id'=>$id,
-                'firm_id' => $id_firma,
-                'user_id' => $this->session->userdata('user_id'),
-                'estado' => false);
-            $this->load->model('registro_firma_model');
-            $this->registro_firma_model->create($array);
-            //file_put_contents('data_temp/firma_'.$id.'.json', json_encode($array));
-            file_put_contents('jnlp_temp/launch'.$momento.'.jnlp', $jnlp_string);
+				show_404();
+			}
+			if($this->input->post('password') !== NULL){
+				$password = $this->input->post('password');
+				$this->load->model('expedientes/usuarios_model');
+				$resp = $this->usuarios_model->comprobar_usuario($password, $this->session->userdata('CodiUsua'));
+				if($resp){
+					$this->session->set_userdata('firma_valida', TRUE);
+					echo 'Valido';
+				} else {
+					echo 'Error';
+				}
+			}
+		}
+		
+	public function download_jnlp($id = null, $id_firma = null){
+		if($this->session->userdata('firma_valida')){
+			if (!in_groups($this->grupos_permitidos, $this->grupos) || $id == NULL || !ctype_digit($id))
+			{
+					show_error('No tiene permisos para la acción solicitada', 500, 'Acción no autorizada');
+			}
+			$archivo_adjunto = $this->archivos_adjuntos_model->get(array('id' => $id));
+			if (empty($archivo_adjunto))
+			{
+					show_404();
+			}
+			//Impide firmar un documento que no este en la oficina
+			/*$oficina = $this->expedientes_model->get_oficina($archivo_adjunto->id_expediente);
+			if ($oficina !== $this->session->userdata('oficina_actual_id') && !in_groups($this->grupos_admin, $this->grupos))
+			{
+					$this->session->set_flashdata('error', 'No puede firmar adjuntos de expedientes que no estén en su oficina');
+					redirect("expedientes/expedientes/ver/$archivo_adjunto->id_expediente");
+			}*/
+			$this->load->model('perfil_model');
+			$usuario = $this->perfil_model->get(array('id' => $this->session->userdata('user_id')));
+			if (empty($usuario))
+			{
+					show_404();
+			}
+			$this->load->model('firmas_archivos_adjuntos_model');
+			$cant = $this->firmas_archivos_adjuntos_model->get_cant_pendientes($id);
+			$posX = 100;
+			switch ($cant){
+				case 1:
+					$posX = 10;
+					break;
+				case 2:
+					$posX = 200;
+					break;
+				case 3:
+					$posX = 400;
+					break;
+				default :
+					$posX = 50;
+					break;
+			}
+			$momento = date('_Ymd_His');
+			$jnlp_string = '<?xml version="1.0" encoding="utf-8"?>'
+								.'<jnlp spec="1.0+" codebase="'.  base_url().'/jnlp_temp/" href="launch'.$momento.'.jnlp">'
+									.'<information>'
+										.'<title>Firma Online Java</title>'
+										.'<vendor>Encode S.A.</vendor>'
+										.'<homepage href="'.  base_url().'" />'
+									.'</information>'
+									.'<update check="always" policy="always"/>'
+									.'<security>'
+									  .'<all-permissions/>'
+									.'</security>'
+									.'<resources>'
+									  .'<!-- Application Resources -->'
+									  .'<j2se version="1.7+" href="http://java.sun.com/products/autodl/j2se"/>'
+									  .'<jar href="'.  base_url().'/jars/JPDFSigner-0.1.jar" main="true" />'
+									  .'<jar href="'.  base_url().'/jars/iText-5.0.6.jar" />'
+									  .'<jar href="'.  base_url().'/jars/log4j-1.2.15.jar" />'
+									  .'<jar href="'.  base_url().'/jars/bcprov-jdk14-138.jar" />'
+									  .'<jar href="'.  base_url().'/jars/axis.jar" />'
+									  .'<jar href="'.  base_url().'/jars/javax.wsdl_1.6.2.v201005080631.jar" />'
+									  .'<jar href="'.  base_url().'/jars/jaxrpc.jar" />'
+									  .'<jar href="'.  base_url().'/jars/org.apache.commons.logging_1.0.4.v201005080501.jar" />'
+									  .'<jar href="'.  base_url().'/jars/saaj.jar" />'
+									.'</resources>'
+									.'<applet-desc documentBase="'.  base_url().'" name="Firm.ar.J" main-class="com.jpdf.signer.FormMain" width="1" height="1">'
+									.'<param name="posX" value="'.$posX.'" />'
+									.'<param name="posY" value="100" />'
+									.'<param name="pagina" value="ultima" />'
+									.'<param name="urlWs" value="'.  base_url().'/expedientes/service/" />'
+									.'<param name="OthersParamsValue" value="id;'.$id.'" />'
+									.'<param name="certHash" value="" />'
+									.'<param name="reasonOptions" value="Firma en conformidad;Firma con protesto" />'//Revisión del documento;Aprobación del documento;Desaprobación del documento
+									.'<param name="URLVirtualToken" value="" />'
+									.'<param name="minpasswordlength" value="" />'
+									.'<param name="Permissions" value="all-permissions" />'
+									.'<param name="JNLPname" value="launch'.$momento.'.jnlp" />'
+								  .'</applet-desc>'
+								.'</jnlp>';
+			$array = array(
+				'pdf_id'=>$id,
+				'firm_id' => $id_firma,
+				'user_id' => $this->session->userdata('user_id'),
+				'estado' => false);
+			$this->load->model('registro_firma_model');
+			$this->registro_firma_model->create($array);
+			//file_put_contents('data_temp/firma_'.$id.'.json', json_encode($array));
+			file_put_contents('jnlp_temp/launch'.$momento.'.jnlp', $jnlp_string);
+	
+			header("Content-Type: text/plain");
+			header('Content-Disposition: attachment; filename="launch'.$momento.'.jnlp"');
+			echo $jnlp_string;
+			$this->session->set_userdata('firma_valida', FALSE);
 
-            header("Content-Type: text/plain");
-            header('Content-Disposition: attachment; filename="launch'.$momento.'.jnlp"');
-            echo $jnlp_string;
-        }
+		} else {
+			show_404();
+		}	
+	}
+
 	public function firmar($id = NULL)
 	{
 		if (!in_groups($this->grupos_permitidos, $this->grupos) || $id == NULL || !ctype_digit($id))
@@ -560,12 +587,13 @@ class Archivos_adjuntos extends MY_Controller
 				}
 				else
 				{
+					$this->session->set_flashdata('error', 'Ocurrió un error al intentar rechazar la firma del documento, por favor intente nuevamente.');
 					redirect("expedientes/archivos_adjuntos/ver/$id", 'refresh');
 				}
 			}
 		}
-		$this->session->set_flashdata('error', 'Ocurrió un error al intentar rechazar la firma del documento, por favor intente nuevamente.');
 		redirect("expedientes/archivos_adjuntos/ver/$id", 'refresh');
+
 	}
 
 	public function solicitar_firma($archivo_id = NULL, $usuario_id = NULL)
@@ -628,13 +656,6 @@ class Archivos_adjuntos extends MY_Controller
 		{
 			show_404();
 		}
-                //No mostrar archivos que no esten en la oficina actual
-		/*$oficina = $this->expedientes_model->get_oficina($archivo_adjunto->id_expediente);
-		if ($oficina !== $this->session->userdata('oficina_actual_id') && !in_groups($this->grupos_admin, $this->grupos))
-		{
-			$this->session->set_flashdata('error', 'No puede ver adjuntos de expedientes que no estén en su oficina');
-			redirect("expedientes/expedientes/ver/$archivo_adjunto->id_expediente");
-		}*/
 		header('Content-Disposition: inline; filename="' . $archivo_adjunto->nombre . '"');
 		header('Content-Type: ' . (empty($archivo_adjunto->tipodecontenido) ?
 				$this->mimetype($archivo_adjunto->contenido) :
@@ -648,6 +669,27 @@ class Archivos_adjuntos extends MY_Controller
 //			ob_clean();
 //			flush();
 		echo $archivo_adjunto->contenido;
+		/*
+		$this->load->library('pdf');
+		$pdf = $this->pdf->load();
+		require_once _MPDF_PATH . 'vendor/setasign/fpdi/fpdi_pdf_parser.php';
+		$pdf->SetImportUse();
+
+		$ContenidoSalida = $archivo_adjunto->contenido;
+		$directorioFichero = sys_get_temp_dir();
+		$tempFile = tempnam($directorioFichero, "INF").".pdf";
+		$gestor = fopen($tempFile, "w");
+		
+		fwrite($gestor, $ContenidoSalida);
+		fclose($gestor);
+
+		$pagecount = $pdf->SetSourceFile($tempFile);
+
+		$tplId = $pdf->ImportPage($pagecount);
+		$pdf->UseTemplate($tplId);
+
+		$pdf->setTitle($archivo_adjunto->nombre);
+		$pdf->Output();*/
 	}
 
 	private function vista_img($id = NULL) //testing
@@ -728,11 +770,9 @@ class Archivos_adjuntos extends MY_Controller
 			$ultimo_pase = $this->pases_model->get(array(
 				'select' => 'id, fojas',
 				'where' => array('id_expediente = ' . $id_expediente),
-				'order_by' => array('id DESC'),
+				'sort_by' => array('id DESC'),
 				'limit' => 1
-			));
-			//var_dump($ultimo_pase[0]->id);
-			
+			));			
 
 			$this->archivos_adjuntos_model->delete(array('id' => $id), FALSE);
 

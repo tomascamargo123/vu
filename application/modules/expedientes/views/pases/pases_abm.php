@@ -135,7 +135,11 @@
 					</div>
 					<div class="box-footer">
 						<?php if ($txt_btn === 'Enviar') : ?>
-							<a class="btn btn-default" href="expedientes/pases/listar_pendientes_e" title="Cancelar">Cancelar</a>
+							<?php if ($digital) : ?>
+								<a class="btn btn-default" href="expedientes/pases/listar_pendientes_ee" title="Cancelar">Cancelar</a>
+							<?php else: ?>
+								<a class="btn btn-default" href="expedientes/pases/listar_pendientes_e" title="Cancelar">Cancelar</a>
+							<?php endif; ?>
 						<?php else: ?>
 							<a class="btn btn-default" href="expedientes/pases/listar_enviados_sinr" title="Cancelar">Cancelar</a>
 						<?php endif; ?>

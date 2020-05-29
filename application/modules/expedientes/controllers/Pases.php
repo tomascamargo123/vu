@@ -258,6 +258,7 @@ class Pases extends MY_Controller {
                 array('label' => 'Anexo', 'data' => 'anexo', 'sort' => 'pase.anexo', 'width' => 5, 'class' => 'dt-body-right', 'query' => 'where'),
                 array('label' => 'Fojas', 'data' => 'fojas', 'sort' => 'pase.fojas', 'width' => 5, 'class' => 'dt-body-right', 'query' => 'where'),
                 array('label' => 'Origen', 'data' => 'oficina_origen', 'sort' => 'oficina.nombre', 'width' => 12, 'query' => 'like'),
+                array('label' => 'Trámite', 'data' => 'tramite_nombre', 'sort' => 'tramite.nombre', 'width' => 13, 'query' => 'like'),
                 array('label' => 'Solicitante / Carátula', 'data' => 'caratula', 'sort' => 'expediente.caratula', 'width' => 15, 'query' => 'like'),
                 array('label' => 'Objeto', 'data' => 'objeto', 'sort' => 'expediente.objeto', 'width' => 13, 'query' => 'like'),
                 array('label' => 'Nota', 'data' => 'nota_pase_id', 'sort' => 'nota_pase_id', 'width' => 6, 'class' => 'dt-body-center', 'render' => $nota_render),
@@ -290,7 +291,7 @@ class Pases extends MY_Controller {
             show_error('No tiene permisos para la acción solicitada', 500, 'Acción no autorizada');
         }
         $this->datatables
-                ->select('pase.id, expediente.id as codigo, pase.id_expediente as idexpediente, pase.ano, pase.numero, pase.anexo, pase.fojas, oficina.nombre as oficina_origen, expediente.caratula as caratula, expediente.objeto as objeto, pase.nota_pase_id, pase.usuario_emisor, pase.fecha_usuario, IF(expediente.firma_pendiente = 1, "display: none;","") as btn_disabled, IF(pase.etapa_circuito > 0,"","") as btn_salir_circuito, IF(pase.revision_id > 0 AND pase.respuesta <> "firma pendiente","display:none;","") as btn_hide_btn_others, IF(pase.revision_id > 0,"","display:none;") as btn_show_button, revision_id', FALSE)
+                ->select('tramite.nombre as tramite_nombre, pase.id, expediente.id as codigo, pase.id_expediente as idexpediente, pase.ano, pase.numero, pase.anexo, pase.fojas, oficina.nombre as oficina_origen, expediente.caratula as caratula, expediente.objeto as objeto, pase.nota_pase_id, pase.usuario_emisor, pase.fecha_usuario, IF(expediente.firma_pendiente = 1, "display: none;","") as btn_disabled, IF(pase.etapa_circuito > 0,"","") as btn_salir_circuito, IF(pase.revision_id > 0 AND pase.respuesta <> "firma pendiente","display:none;","") as btn_hide_btn_others, IF(pase.revision_id > 0,"","display:none;") as btn_show_button, revision_id', FALSE)
                 ->unset_column('pase.id')
                 ->exact_where_column('ano,numero,anexo')
                 ->from("$this->sigmu_schema.pase")
@@ -317,7 +318,7 @@ class Pases extends MY_Controller {
                         . '<a href="expedientes/pases/revision/view/$1/$6" title="Ver Revision" class="btn btn-sm btn-info" style="width: 100px;$3$5">Ver Revisión</a>', 
                         'id, idexpediente, btn_disabled, btn_hide_btn_others, btn_show_button, revision_id');
                         if($data == ""){
-                            $this->datatables->set_limit(10);
+                            //$this->datatables->set_limit(10);
                         }
         echo $this->datatables->generate();
     }
@@ -815,7 +816,11 @@ class Pases extends MY_Controller {
             $resp = $this->db->query("select pase.destino, pase. respuesta from sigmu.pase where pase.id = ".$this->input->post('id'))->result_array();
             if($tipo == 'enviar' && (($resp[0]['respuesta'] !== 'pendiente' && $resp[0]['respuesta'] !== 'rechazado') || $resp[0]['destino'] > 0) ){
                 $this->session->set_flashdata('error', 'El pase ya fue enviado');
-                redirect("expedientes/pases/listar_pendientes_e", "refresh");
+                if($is_digital){
+                    redirect("expedientes/pases/listar_pendientes_ee", "refresh");
+                } else {
+                    redirect("expedientes/pases/listar_pendientes_e", "refresh");
+                }
             } else {
                 if ($this->form_validation->run() === TRUE && !$error_msg) {
                     $this->db->trans_begin();
@@ -862,7 +867,7 @@ class Pases extends MY_Controller {
                             'fecha_usuario' => date_format(new DateTime(), 'Y-m-d H:i:s')
                                 ), FALSE);
                         }else{
-                            //si es pase digital pasa directamente al pendiente de emicion
+                            //si es pase digital pasa directamente al pendiente de emision
                             
                             //modificamose el pase simulando la recepcion
                             $trans_ok&= $this->pases_model->update(array(
@@ -872,6 +877,7 @@ class Pases extends MY_Controller {
                                 'fecha' =>  date_format(new DateTime(), 'Y-m-d H:i:s'),
                                 'fojas' => $this->input->post('fojas'),
                                 'respuesta' => 'aceptado',
+                                'usuario_emisor' => $this->session->userdata('CodiUsua'),
                                 'usuario' => $this->session->userdata('CodiUsua'),
                                 'usuario_receptor' => 'EXP. DIGITAL',
                                 'fecha_usuario' => date_format(new DateTime(), 'Y-m-d H:i:s')), FALSE);
@@ -947,7 +953,7 @@ class Pases extends MY_Controller {
                                 'respuesta' => 'pendiente',
                                 'fojas' => $num_fojas,
                                 'fecha' => date_format(new DateTime(), 'Y-m-d H:i:s'),
-                                'usuario_emisor' => $this->session->userdata('CodiUsua'),
+                                'usuario_emisor' => 'EXP. DIGITAL',
                                 'terminal' => $this->input->ip_address(),
                                 'fecha_usuario' => date_format(new DateTime(), 'Y-m-d  H:i:s')
                                     ), FALSE);
@@ -987,13 +993,18 @@ class Pases extends MY_Controller {
                         $this->db->trans_commit();
                         $this->session->set_flashdata('message', $this->pases_model->get_msg());
                         if ($tipo === 'enviar') {
-                            redirect("expedientes/pases/listar_pendientes_e", 'refresh');
+                            if($is_digital){
+                                redirect("expedientes/pases/listar_pendientes_ee", 'refresh');
+                            } else {
+                                redirect("expedientes/pases/listar_pendientes_e", 'refresh');
+                            }
                         } else {
                             redirect("expedientes/pases/listar_enviados_sinr", 'refresh');
                         }
                     } else {
                         $this->db->trans_rollback();
                         $error_msg = 'Se ha producido un error con la base de datos.';
+                        $error_msg .='<br>' . $this->pases_model->get_error();
                         if ($this->pases_model->get_error()) {
                             $error_msg .='<br>' . $this->pases_model->get_error();
                         }

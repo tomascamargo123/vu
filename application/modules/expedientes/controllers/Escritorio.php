@@ -47,7 +47,8 @@ class Escritorio extends MY_Controller
 					'table' => "$this->sigmu_schema.usuario_oficina",
 					'where' => 'usuario_oficina.ID_OFICINA = oficina.id'
 				)),
-			'where' => array(array('column' => 'usuario_oficina.ID_USUARIO', 'value' => $this->session->userdata('CodiUsua'))),
+			'where' => array(array('column' => 'usuario_oficina.ID_USUARIO', 'value' => $this->session->userdata('CodiUsua')),
+			array('column' => 'oficina.organigrama', 'value' => $this->session->userdata('organigrama'))),
                         'sort_by' => 'ORDEN'
 		));
 		$data['oficina_opt_selected'] = $this->session->userdata('oficina_actual_id');

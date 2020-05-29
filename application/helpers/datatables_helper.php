@@ -125,14 +125,14 @@ if (!function_exists('buildJS'))
 		$tableJS .= 'colReorder: true,'
 			. 'drawCallback: function(setting){
 				var id = "'.$tableData['table_id'].'"
-				if(id === "avisos_table"){
+				if(id === "requerimientos_table"){
 					changeStyles();
 				}
-				if (Math.ceil((this.fnSettings().fnRecordsDisplay()) / this.fnSettings()._iDisplayLength) > 1) {
+				/*if (Math.ceil((this.fnSettings().fnRecordsDisplay()) / this.fnSettings()._iDisplayLength) > 1) {
 					$("#'.$tableData['table_id'].'_paginate").css("display", "block");     
 				} else {                
 					$("#'.$tableData['table_id'].'_paginate").css("display", "none");
-				}
+				}*/
 				
 			}, ';
 		$tableJS .= '});' . "\n";

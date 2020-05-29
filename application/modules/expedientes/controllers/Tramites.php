@@ -192,7 +192,7 @@ class Tramites extends MY_Controller
 		}
 		$data['tramite'] = $tramite;
 
-		$data['txt_btn'] = 'Editar';
+		$data['txt_btn'] = 'Guardar';
 		$data['class'] = array('agregar' => '', 'ver' => '', 'editar' => 'active btn-app-zetta-active', 'eliminar' => '');
 		$data['habilitar_check'] = 1;
 		$data['title'] = 'Expedientes - Trámites - Editar';
@@ -327,14 +327,25 @@ class Tramites extends MY_Controller
 		{
 			$options = array();
 			$options['estado'] = 1;
-			if ($this->input->post('tipo_tramite') === 'I')
+			$tipo_tramite = $this->input->post('tipo_tramite');
+			if ($tipo_tramite === 'I')
 			{
 				$options['tipo'] = 1;
+				$options['digital'] = 0;
 			}
-			else
+			else if ($tipo_tramite === 'E')
 			{
 				$options['tipo'] = 0;
-			}
+				$options['digital'] = 0;
+			} 
+			else if ($tipo_tramite === 'ID'){
+				$options['tipo'] = 1;
+				$options['digital'] = 1;
+			 } 
+			else {
+				$options['tipo'] = 0;
+				$options['digital'] = 1;
+			} 
 			$options['sort_by'] = 'nombre';
 			$tramites = $this->tramites_model->get($options);
 			$array_tramites = array();

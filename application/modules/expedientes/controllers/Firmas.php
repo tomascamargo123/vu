@@ -179,7 +179,7 @@ class Firmas extends MY_Controller
 		echo json_encode('ERROR');
 	}
         
-        public function generar_jnlp_total(){
+        private function generar_jnlp_total(){
             $this->load->model(['perfil_model','archivos_adjuntos_model']);
             $usuario = $this->perfil_model->get(array('id' => $this->session->userdata('user_id')));
             if (empty($usuario))
@@ -253,9 +253,22 @@ class Firmas extends MY_Controller
             //file_put_contents('data_temp/firma_'.$id.'.json', json_encode($array));
             file_put_contents('jnlp_temp/launch'.$momento.'.jnlp', $jnlp_string);
             $data = ["xml_str"=>$jnlp_string,"fichero_name"=>"launch$momento.jnlp" ];
-            echo json_encode($data);
+            return json_encode($data);
             
-        }
+		}
+		
+	public function confirmar_firma(){
+		if($this->input->post('password') !== NULL){
+			$password = $this->input->post('password');
+			$this->load->model('expedientes/usuarios_model');
+			$resp = $this->usuarios_model->comprobar_usuario($password, $this->session->userdata('CodiUsua'));
+			if($resp){
+				echo $this->generar_jnlp_total();
+			} else {
+				echo '';
+			}
+		}
+	}
 }
 /* End of file Firmas.php */
 /* Location: ./application/modules/expedientes/controllers/Firmas.php */

@@ -12,8 +12,9 @@ class Oficinas extends MY_Controller
 		{
 			redirect('expedientes/escritorio');
 		}
-		$this->sigmu_schema = $this->config->item('sigmu_schema');
 		$this->load->model('expedientes/oficinas_model');
+		$this->ventanillas = $this->oficinas_model->get_ventanillas();
+		$this->sigmu_schema = $this->config->item('sigmu_schema');
 		$this->grupos_admin = array('admin');
 		$this->grupos_permitidos = array('admin', 'expedientes_admin', 'expedientes_consulta_general');
 		$this->grupos_ajax = array('admin', 'expedientes_admin', 'expedientes_supervision', 'expedientes_usuario', 'expedientes_consulta_general');
@@ -76,7 +77,8 @@ class Oficinas extends MY_Controller
 			->add_column('edit', '<a href="expedientes/oficinas/ver/$1" title="Administrar"><i class="fa fa-cogs"></i></a>', 'id')
 			->add_column('select_solicitante', '<a data-dismiss="modal" href="" onclick="$(\'#persona_id\').val(\'$1\');$(\'#caratula\').val(\'$2\');$(\'#caratula\').focus();$(\'#btn_buscar_oficina_solicitante\').focus();"title="Seleccionar"><i class="fa fa-check"></i></a>', 'id, nombre')
 			->add_column('select_destino', '<a data-dismiss="modal" href="" onclick="$(\'#oficina_id\').val(\'$1\');$(\'#oficina\').val(\'$2\');$(\'#oficina\').focus();$(\'#btn_buscar_oficina_destino\').focus();"title="Seleccionar"><i class="fa fa-check"></i></a>', 'id, nombre')
-			->where('id>0');
+			->where('id>0')
+			->where('organigrama', $this->session->userdata('organigrama'));
 			if($solo_habilitados){
 				$this->datatables
 				->where('proceso_usuario','A');
@@ -106,6 +108,7 @@ class Oficinas extends MY_Controller
 				'emisora_pase' => ($this->input->post('emisora_pase') == 'on' ? 1 : NULL),
 				'receptora_pase' => ($this->input->post('receptora_pase') == 'on' ? 1 : NULL),
 				'inicia_expediente' => ($this->input->post('inicia_expediente') == 'on' ? 1 : NULL),
+				'organigrama' => $this->session->userdata('organigrama'),
 			));
 
 			if ($trans_ok)
@@ -242,7 +245,7 @@ class Oficinas extends MY_Controller
 		}
 		$data['editar'] = $oficina->inicia_expediente;
 		$data['oficina'] = $oficina;
-		$data['txt_btn'] = 'Editar';
+		$data['txt_btn'] = 'Guardar';
 		$data['class'] = array('agregar' => '', 'editar' => 'active btn-app-zetta-active', 'ver' => '', 'eliminar' => '');
 		$data['title'] = 'Expedientes - Oficinas - Editar';
 		$this->load_template('expedientes/oficinas/oficinas_abm', $data);
@@ -295,11 +298,28 @@ class Oficinas extends MY_Controller
 			show_error('No tiene permisos para la acción solicitada', 500, 'Acción no autorizada');
 		}
 		$this->form_validation->set_rules('oficina_id', 'Número oficina', 'integer|required');
+		$desde_ventanilla = FALSE;
+		$a_ventanilla = FALSE;
+		foreach($this->ventanillas as $val){
+			if($this->session->userdata('oficina_actual_id') == $val['id']){
+				$desde_ventanilla = TRUE;
+			}
+			if($this->input->post('oficina_id') == $val['id']){
+				$a_ventanilla = TRUE;
+			}
+		}
 		if ($this->form_validation->run() === TRUE)
 		{
+			
 			$options = array();
-			$options['id'] = $this->input->post('oficina_id');
-			$options['proceso_usuario'] = 'A';
+			if($desde_ventanilla && $a_ventanilla){
+				$options['id'] = $this->input->post('oficina_id');
+				$options['proceso_usuario'] = 'A';
+			} else {
+				$options['id'] = $this->input->post('oficina_id');
+				$options['proceso_usuario'] = 'A';
+				$options['organigrama'] = $this->session->userdata('organigrama');
+			}
 
 			$oficinas = $this->oficinas_model->get($options);
 			if (!empty($oficinas))

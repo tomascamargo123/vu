@@ -12,7 +12,7 @@ class Archivos_adjuntos_model extends MY_Model
 		$this->table_name = "$this->sigmu_schema.archivoadjunto";
 		$this->msg_name = 'Archivo adjunto';
 		$this->id_name = 'id';
-		$this->columnas = array('id', 'nombre', 'tamanio', 'tipodecontenido', 'contenido', 'id_expediente', 'descripcion', 'fecha', 'pase_id');
+		$this->columnas = array('id', 'nombre', 'tamanio', 'tipodecontenido', 'contenido', 'id_expediente', 'descripcion', 'fecha', 'pase_id', 'orden');
 		$this->fields = array(
 			array('name' => 'nombre', 'label' => 'Nombre', 'maxlength' => '255'),
 			array('name' => 'tamanio', 'label' => 'Tamaño', 'type' => 'integer', 'maxlength' => '20'),
@@ -99,6 +99,7 @@ class Archivos_adjuntos_model extends MY_Model
             `archivoadjunto`.`pase_id`,
             `archivoadjunto`.`id_expediente`,
             `archivoadjunto`.`fecha`,
+            `archivoadjunto`.`orden`,
             firmas_archivos_adjuntos.estado,
             CASE 
             WHEN estado = 'Solicitada' THEN 1

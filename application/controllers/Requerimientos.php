@@ -26,9 +26,10 @@ class Requerimientos extends MY_Controller
 		}
 		$tableData = array(
 			'columns' => array(
+				array('label' => 'Número', 'data' => 'id', 'sort' => 'aviso.id', 'width' => 0),
 				array('label' => 'Mensaje', 'data' => 'mensaje', 'sort' => 'aviso.mensaje', 'width' => 40),
-				array('label' => 'Estado', 'data' => 'estado', 'sort' => 'aviso.estado', 'width' => 10),
-				array('label' => 'Importancia', 'data' => 'importancia', 'sort' => 'aviso.importancia', 'width' => 10),
+				array('label' => 'Estado', 'data' => 'estado', 'sort' => 'aviso.estado', 'width' => 10, 'searchable' => 'false'),
+				array('label' => 'Importancia', 'data' => 'importancia', 'sort' => 'aviso.importancia', 'width' => 10, 'searchable' => 'false'),
 				array('label' => 'Usuario', 'data' => 'usuario', 'sort' => 'usuario.DetaUsua', 'width' => 10),
 				array('label' => 'Fecha', 'data' => 'audi_fecha', 'sort' => 'audi_fecha', 'width' => 15),
 				array('label' => 'Solicitante', 'data' => 'solicitante', 'sort' => 'solicitante', 'width' => 10),
@@ -36,7 +37,7 @@ class Requerimientos extends MY_Controller
 			),
 			'table_id' => 'requerimientos_table',
 			'source_url' => 'requerimientos/listar_data',
-			'order' => array(array(4, 'desc')),
+			'order' => array(array(0, 'desc')),
 			'initComplete' => 'function () { changeStyles(); }'
 		);
 		$data['html_table'] = buildHTML($tableData);
@@ -77,15 +78,10 @@ class Requerimientos extends MY_Controller
 	{
 		if (!in_groups($this->grupos_permitidos, $this->grupos))
 		{
-			show_error('No tiene permisos para la acción solicitada', 500, 'Acción no autorizada');
-		}
-		if (in_groups($this->grupos_solo_consulta, $this->grupos))
-		{
 			$this->session->set_flashdata('error', 'Usuario sin permisos de edición');
 			redirect("requerimientos/listar", 'refresh');
 		}
 		$this->load->model('expedientes/oficinas_model');
-		$this->array_activo_control = $array_activo = array('1' => 'Activo', '0' => 'Inactivo');
 		$this->array_importancia_control = $array_importancia = array('0' => 'Baja', '1' => 'Moderada', '2' => 'Alta');
 		$this->array_estado_control = $array_estado = array('0' => 'Pendiente', '1' => 'En proceso', '2' => 'Resuelto', '3' => 'Rechazado');
 		$this->set_model_validation_rules($this->requerimientos_model);
@@ -95,7 +91,6 @@ class Requerimientos extends MY_Controller
 			$trans_ok&= $this->requerimientos_model->create(array(
 				'mensaje' => $this->input->post('mensaje'),
 				'detalle' => $this->input->post('detalle'),
-				'activo' => $this->input->post('activo'),
 				'estado' => $this->input->post('estado'),
 				'importancia' => $this->input->post('importancia'),
 				'usuario' => $this->session->userdata('CodiUsua'),
@@ -140,10 +135,6 @@ class Requerimientos extends MY_Controller
 	{
 		if (!in_groups($this->grupos_permitidos, $this->grupos) || $id == NULL || !ctype_digit($id))
 		{
-			show_error('No tiene permisos para la acción solicitada', 500, 'Acción no autorizada');
-		}
-		if (in_groups($this->grupos_solo_consulta, $this->grupos))
-		{
 			$this->session->set_flashdata('error', 'Usuario sin permisos de edición');
 			redirect("requerimientos/ver/$id", 'refresh');
 		}
@@ -153,7 +144,6 @@ class Requerimientos extends MY_Controller
 			show_404();
 		}
 		$this->load->model('expedientes/oficinas_model');
-		$this->array_activo_control = $array_activo = array('1' => 'Activo', '0' => 'Inactivo');
 		$this->array_importancia_control = $array_importancia = array('0' => 'Baja', '1' => 'Moderada', '2' => 'Alta');
 		$this->array_estado_control = $array_estado = array('0' => 'Pendiente', '1' => 'En proceso', '2' => 'Resuelto', '3' => 'Rechazado');
 		$this->set_model_validation_rules($this->requerimientos_model);
@@ -171,9 +161,9 @@ class Requerimientos extends MY_Controller
 					'id' => $this->input->post('id'),
 					'mensaje' => $this->input->post('mensaje'),
 					'detalle' => $this->input->post('detalle'),
-					'activo' => $this->input->post('activo'),
 					'estado' => $this->input->post('estado'),
 					'importancia' => $this->input->post('importancia'),
+					'comentario' => $this->input->post('comentario'),
 					'usuario' => $this->session->userdata('CodiUsua'),
 				));
 				if ($trans_ok)
@@ -206,7 +196,7 @@ class Requerimientos extends MY_Controller
 		}
 		$data['requerimientos'] = $requerimientos;
 
-		$data['txt_btn'] = 'Editar';
+		$data['txt_btn'] = 'Guardar';
 		$data['class'] = array('agregar' => '', 'ver' => '', 'editar' => 'active btn-app-zetta-active', 'eliminar' => '');
 		$data['title'] = 'Requerimientos - Editar';
 		$this->load_template('requerimientos/requerimientos_abm', $data);
@@ -215,10 +205,6 @@ class Requerimientos extends MY_Controller
 	public function eliminar($id = NULL)
 	{
 		if (!in_groups($this->grupos_permitidos, $this->grupos) || $id == NULL || !ctype_digit($id))
-		{
-			show_error('No tiene permisos para la acción solicitada', 500, 'Acción no autorizada');
-		}
-		if (in_groups($this->grupos_solo_consulta, $this->grupos))
 		{
 			$this->session->set_flashdata('error', 'Usuario sin permisos de edición');
 			redirect("requerimientos/ver/$id", 'refresh');
@@ -230,7 +216,6 @@ class Requerimientos extends MY_Controller
 		}
 
 		$this->load->model('expedientes/oficinas_model');
-		$array_activo = array('1' => 'Activo', '0' => 'Inactivo');
 		$this->array_importancia_control = $array_importancia = array('0' => 'Baja', '1' => 'Moderada', '2' => 'Alta');
 		$this->array_estado_control = $array_estado = array('0' => 'Pendiente', '1' => 'En proceso', '2' => 'Resuelto', '3' => 'Rechazado');
 		if (isset($_POST) && !empty($_POST))
@@ -291,7 +276,6 @@ class Requerimientos extends MY_Controller
 		}
 
 		$this->load->model('expedientes/oficinas_model');
-		$array_activo = array('1' => 'Activo', '0' => 'Inactivo');
 		$this->array_importancia_control = $array_importancia = array('0' => 'Baja', '1' => 'Moderada', '2' => 'Alta');
 		$this->array_estado_control = $array_estado = array('0' => 'Pendiente', '1' => 'En proceso', '2' => 'Resuelto', '3' => 'Rechazado');
 		$data['error'] = $this->session->flashdata('error');
@@ -332,6 +316,8 @@ class Requerimientos extends MY_Controller
 		$tableData = array(
 			'columns' => array(
 				array('label' => 'Mensaje', 'data' => 'mensaje', 'sort' => 'aviso.mensaje', 'width' => 40),
+				array('label' => 'Estado', 'data' => 'estado', 'sort' => 'estado', 'width' => 15),
+				array('label' => 'Comentario', 'data' => 'comentario', 'sort' => 'comentario', 'width' => 30),
 				array('label' => 'Fecha', 'data' => 'audi_fecha', 'sort' => 'audi_fecha', 'width' => 15),
 				array('label' => '', 'data' => 'edit', 'width' => 5, 'class' => 'dt-body-center', 'responsive_class' => 'all', 'sortable' => 'false', 'searchable' => 'false')
 			),
@@ -355,7 +341,11 @@ class Requerimientos extends MY_Controller
 			show_error('No tiene permisos para la acción solicitada', 500, 'Acción no autorizada');
 		}
 		$this->datatables
-			->select('aviso.id, aviso.mensaje, aviso.audi_fecha')
+			->select('aviso.id, aviso.mensaje, aviso.audi_fecha, aviso.comentario, (CASE aviso.estado 
+			WHEN 0 THEN \'Pendiente\' 
+			WHEN 1 THEN \'En proceso\' 
+			WHEN 2 THEN \'Resuelto\' 
+			ELSE \'Rechazado\' END) as estado, ')
 			->unset_column('id')
 			->from("$this->sigmu_schema.aviso")
 			->where('aviso.solicitante', $this->session->userdata('CodiUsua'))
@@ -439,20 +429,25 @@ class Requerimientos extends MY_Controller
 			{
 				show_error('Esta solicitud no pasó el control de seguridad.');
 			}
-
-			if ($this->form_validation->run() === TRUE)
-			{
-				$trans_ok = TRUE;
-				$trans_ok&= $this->requerimientos_model->update(array(
-					'id' => $this->input->post('id'),
-					'mensaje' => $this->input->post('mensaje'),
-					'usuario' => $this->session->userdata('CodiUsua'),
-				));
-
-				if ($trans_ok)
+			$req_a_editar = $this->requerimientos_model->get(['id' => $this->input->post('id')]);
+			if($req_a_editar->estado != 0){
+				$this->session->set_flashdata('error', 'No se puede editar este requerimiento, está siendo analizado a procesado.');
+				redirect('requerimientos/listar_personales', 'refresh');
+			} else {
+				if ($this->form_validation->run() === TRUE)
 				{
-					$this->session->set_flashdata('message', $this->requerimientos_model->get_msg());
-					redirect('requerimientos/listar_personales', 'refresh');
+					$trans_ok = TRUE;
+					$trans_ok&= $this->requerimientos_model->update(array(
+						'id' => $this->input->post('id'),
+						'mensaje' => $this->input->post('mensaje'),
+						'usuario' => $this->session->userdata('CodiUsua'),
+					));
+
+					if ($trans_ok)
+					{
+						$this->session->set_flashdata('message', $this->requerimientos_model->get_msg());
+						redirect('requerimientos/listar_personales', 'refresh');
+					}
 				}
 			}
 		}
@@ -484,7 +479,7 @@ class Requerimientos extends MY_Controller
 		}
 		$data['requerimientos'] = $requerimientos;
 		$data['admin'] = FALSE;
-		$data['txt_btn'] = 'Editar';
+		$data['txt_btn'] = 'Guardar';
 		$data['class'] = array('agregar' => '', 'ver' => '', 'editar' => 'active btn-app-zetta-active', 'eliminar' => '');
 		$data['title'] = 'Requerimientos - Editar';
 		$this->load_template('requerimientos/requerimientos_abm', $data);
@@ -510,14 +505,19 @@ class Requerimientos extends MY_Controller
 			{
 				show_error('Esta solicitud no pasó el control de seguridad.');
 			}
-
-			$trans_ok = TRUE;
-			$trans_ok&= $this->requerimientos_model->delete(array('id' => $this->input->post('id')));
-			if ($trans_ok)
-			{
-				$this->session->set_flashdata('message', $this->requerimientos_model->get_msg());
+			$req_a_eliminar = $this->requerimientos_model->get(['id' => $this->input->post('id')]);
+			if($req_a_eliminar->estado != 0){
+				$this->session->set_flashdata('error', 'No se puede eliminar este requerimiento, está siendo analizado a procesado.');
 				redirect('requerimientos/listar_personales', 'refresh');
-			}
+			} else {
+				$trans_ok = TRUE;
+				$trans_ok&= $this->requerimientos_model->delete(array('id' => $this->input->post('id')));
+				if ($trans_ok)
+				{
+					$this->session->set_flashdata('message', $this->requerimientos_model->get_msg());
+					redirect('requerimientos/listar_personales', 'refresh');
+				}
+			}	
 		}
 		$data['error'] = (validation_errors() ? validation_errors() : ($this->requerimientos_model->get_error() ? $this->requerimientos_model->get_error() : $this->session->flashdata('error')));
 

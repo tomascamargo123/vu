@@ -69,13 +69,13 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 |
 | The $query_builder variables lets you determine whether or not to load
 | the query builder class.*/
-/*
+
 $db['default'] = array(
 	'dsn'	=> '',
-	'hostname' => '192.168.1.201',
-	'port' => 3307,
-	'username' => 'expedientes',
-	'password' => 'expedigital2017',
+	'hostname' => 'localhost',
+	'port' => 3306,
+	'username' => 'root',
+	'password' => '',
 	'database' => 'expedientes',
 	'dbdriver' => 'mysqli',
 	'dbprefix' => '',
@@ -94,16 +94,64 @@ $db['default'] = array(
 );
 $db['infogov'] = array(
 	'dsn' => '',
-	'hostname' => '192.168.1.201',
-	'port' => 3307,
-	'username' => 'expedientes',
-	'password' => 'expedigital2017',
+	'hostname' => 'localhost',
+	'port' => 3306,
+	'username' => 'root',
+	'password' => '',
 	'database' => 'vistas',
 	'dbdriver' => 'mysqli',
 	'dbprefix' => '',
 	'pconnect' => FALSE,
 	'db_debug' => (ENVIRONMENT !== 'production'),
 	'cache_on' => FALSE,
+	'cachedir' => '',
+	'char_set' => 'utf8',
+	'dbcollat' => 'utf8_general_ci',
+	'swap_pre' => '',
+	'encrypt' => FALSE,
+	'compress' => FALSE,
+	'stricton' => FALSE,
+	'failover' => array(),
+	'save_queries' => TRUE
+);
+
+$active_group = 'default';
+$query_builder = TRUE;
+/*
+$db['default'] = array(
+	'dsn'	=> '',
+	'hostname' => '192.168.1.149',
+	'port' => 3306,
+	'username' => 'admin',
+	'password' => '1234',
+	'database' => 'expedientes',
+	'dbdriver' => 'mysqli',
+	'dbprefix' => '',
+	'pconnect' => FALSE,
+	'db_debug' => (ENVIRONMENT !== 'development'),
+	'cache_on' => TRUE,
+	'cachedir' => '',
+	'char_set' => 'utf8',
+	'dbcollat' => 'utf8_general_ci',
+	'swap_pre' => '',
+	'encrypt' => FALSE,
+	'compress' => FALSE,
+	'stricton' => FALSE,
+	'failover' => array(),
+	'save_queries' => TRUE
+);
+$db['infogov'] = array(
+	'dsn' => '',
+	'hostname' => '192.148.1.149',
+	'port' => 3306,
+	'username' => 'admin',
+	'password' => '1234',
+	'database' => 'vistas',
+	'dbdriver' => 'mysqli',
+	'dbprefix' => '',
+	'pconnect' => FALSE,
+	'db_debug' => (ENVIRONMENT !== 'development'),
+	'cache_on' => TRUE,
 	'cachedir' => '',
 	'char_set' => 'utf8',
 	'dbcollat' => 'utf8_general_ci',
@@ -114,51 +162,3 @@ $db['infogov'] = array(
 	'failover' => array(),
 	'save_queries' => TRUE
 );*/
-
-$active_group = 'default';
-$query_builder = TRUE;
-
-$db['default'] = array(
-	'dsn'	=> '',
-	'hostname' => 'localhost',
-	'port' => 3306,
-	'username' => 'root',
-	'password' => '',
-	'database' => 'expedientes',
-	'dbdriver' => 'mysqli',
-	'dbprefix' => '',
-	'pconnect' => FALSE,
-	'db_debug' => (ENVIRONMENT !== 'development'),
-	'cache_on' => TRUE,
-	'cachedir' => '',
-	'char_set' => 'utf8',
-	'dbcollat' => 'utf8_general_ci',
-	'swap_pre' => '',
-	'encrypt' => FALSE,
-	'compress' => FALSE,
-	'stricton' => FALSE,
-	'failover' => array(),
-	'save_queries' => TRUE
-);
-$db['infogov'] = array(
-	'dsn' => '',
-	'hostname' => 'localhost',
-	'port' => 3306,
-	'username' => 'root',
-	'password' => '',
-	'database' => 'vistas',
-	'dbdriver' => 'mysqli',
-	'dbprefix' => '',
-	'pconnect' => FALSE,
-	'db_debug' => (ENVIRONMENT !== 'development'),
-	'cache_on' => TRUE,
-	'cachedir' => '',
-	'char_set' => 'utf8',
-	'dbcollat' => 'utf8_general_ci',
-	'swap_pre' => '',
-	'encrypt' => FALSE,
-	'compress' => FALSE,
-	'stricton' => FALSE,
-	'failover' => array(),
-	'save_queries' => TRUE
-);

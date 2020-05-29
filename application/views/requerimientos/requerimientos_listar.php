@@ -2,8 +2,8 @@
 function changeStyles () {
 	$('#requerimientos_table tr').each(function() {
 		if ($(this).find("td:first").length > 0) {
-			var estado = $(this).find("td").eq(1);
-			var importancia = $(this).find("td").eq(2);
+			var estado = $(this).find("td").eq(2);
+			var importancia = $(this).find("td").eq(3);
 			switch(estado.html()){
 				case 'Pendiente':
 					$(estado).attr('class', 'amarillo');

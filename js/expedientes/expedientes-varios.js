@@ -65,13 +65,13 @@ function actualizar_tramites() {
 		$.each(data, function(text, val) {
 			options[options.length] = new Option(text, val);
 		});
-		if (tipo_tramite === 'I') {
+		if (tipo_tramite === 'I' || tipo_tramite === 'ID') {
 			jQuery('#btn_buscar_oficina_solicitante').show();
 			jQuery('#div_persona_id').show();
 			jQuery('#div_caratula').attr('class', 'form-group col-md-6 col-sm-6 col-xs-8');
 			jQuery('#persona_id').removeAttr('disabled');
 			
-		} else if (tipo_tramite === 'E') {
+		} else if (tipo_tramite === 'E' || tipo_tramite === 'ED') {
 			jQuery('#btn_buscar_solicitante').show();
 			jQuery('#div_persona_id').hide();
 			jQuery('#div_caratula').attr('class', 'form-group col-md-9 col-sm-9 col-xs-12');
@@ -136,22 +136,28 @@ function agregar_solicitud_firma(docuento_adjunto_id, firma_id){
         $("#btn-firmar-selec").show();
 }
 
-function generar_jnlp_total(){
-    var json_afirmar = JSON.stringify({"id_files":array_docs_firmar});
-    var request = $.ajax({
-        url: "expedientes/firmas/generar_jnlp_total",
-        method: "POST",
-        data: { afirmar : json_afirmar},
-        dataType: "html"
-      });
-
-      request.done(function( data ) {
-        var jnlp = JSON.parse(data);
-        var blob = new Blob([jnlp.xml_str], {
-            type: 'text/plain'
-        });
-        descargarArchivo(blob,jnlp.fichero_name);
-      });
+function confirmar_firmas(){
+	var password = $('input[name="password"]').val();
+	if(password === ''){
+		alert('Ingrese una contraseña');
+	} else {
+		var json_afirmar = JSON.stringify({"id_files":array_docs_firmar});
+		$.post('expedientes/firmas/confirmar_firma', {
+			password : password,
+			afirmar : json_afirmar,
+		}).done(function(data){
+			if(data === ''){
+				$('#alert-error').show();
+			} else {
+				$('input[name="password"]').val('');
+				var jnlp = JSON.parse(data);
+				var blob = new Blob([jnlp.xml_str], {
+					type: 'text/plain'
+				});
+				descargarArchivo(blob,jnlp.fichero_name);
+			}
+		});
+	}
 }
 
 function descargarArchivo(contenidoEnBlob, nombreArchivo) {

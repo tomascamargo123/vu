@@ -44,7 +44,7 @@
 							<i class="fa fa-search" id="btn-ver"></i> Ver
 						</a>
 						<?php endif; ?>
-						<a class="btn btn-app btn-app-zetta <?php echo $class['editar']; ?>" href="requerimientos/editar/<?php echo (!empty($requerimientos->id)) ? $requerimientos->id : ''; ?>">
+						<a class="btn btn-app btn-app-zetta <?php echo $class['editar']; ?>" href="requerimientos/<?php echo !isset($admin) ? "editar" : "editar_personales" ?>/<?php echo (!empty($requerimientos->id)) ? $requerimientos->id : ''; ?>">
 							<i class="fa fa-edit" id="btn-editar"></i> Editar
 						</a>
 						<a class="btn btn-app btn-app-zetta <?php echo $class['eliminar']; ?>" href="requerimientos/<?php echo !isset($admin) ? "eliminar" : "eliminar_personales" ?>/<?php echo (!empty($requerimientos->id)) ? $requerimientos->id : ''; ?>">
@@ -60,7 +60,7 @@
 					<div class="box-footer">
 						<a class="btn btn-default" href= <?php echo !isset($admin) ? "requerimientos/listar" : "requerimientos/listar_personales" ?> title="Cancelar">Cancelar</a>
 						<?php echo (!empty($txt_btn)) ? form_submit($data_submit, $txt_btn) : ''; ?>
-						<?php echo ($txt_btn === 'Editar' || $txt_btn === 'Eliminar') ? form_hidden('id', $requerimientos->id) : ''; ?>
+						<?php echo ($txt_btn === 'Guardar' || $txt_btn === 'Eliminar') ? form_hidden('id', $requerimientos->id) : ''; ?>
 					</div>
 					<?php echo form_close(); ?>
 				</div>

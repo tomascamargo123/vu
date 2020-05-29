@@ -25,6 +25,11 @@
 		</ol>
 	</section>
 	<section class="content">
+			<div class="alert alert-danger alert-dismissable" id="alert-error" style="display: none;">
+				<button type="button" class="close" onclick="$('#alert-error').hide()">×</button>
+				<h4><i class="icon fa fa-ban"></i> ¡Error!</h4>
+				Contraseña incorrecta
+			</div>
 		<?php if (!empty($error)) : ?>
 			<div class="alert alert-danger alert-dismissable">
 				<button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
@@ -55,7 +60,7 @@
                                     <div class="box-footer">
                                         <?php if($html_table != ""){
                                             ?>
-                                        <button class="btn btn-danger" style="float: right;" onclick="generar_jnlp_total()" id="btn-firmar-selec">Firmar Seleccionados</button>
+                                        <button class="btn btn-danger" style="float: right;" data-toggle="modal" data-target="#modal-confirmar" id="btn-firmar-selec">Firmar Seleccionados</button>
                                             <?php
                                         } ?>
                                     </div>
@@ -84,6 +89,26 @@
 				<?php echo form_submit(array('class' => 'btn btn-danger pull-right', 'title' => 'Rechazar'), 'Rechazar'); ?>
 			</div>
 			<?php echo form_close(); ?>
+		</div>
+	</div>
+</div>
+<div class="modal fade" id="modal-confirmar" tabindex="-1" role="dialog" style="margin-top: 50px;">
+	<div class="modal-dialog">
+		<div class="modal-content">
+			<div class="modal-header">
+				<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+				<h4 class="modal-title">Ingrese contraseña para confirmar</h4>
+			</div>
+			<div class="modal-body">
+				<div class="form-group">
+					<label>Contraseña</label>
+					<input class="form-control" type="password" name="password"/>
+				</div>
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-default" data-dismiss="modal">Cancelar</button>
+				<button type="button" class="btn btn-primary" data-dismiss="modal" onclick="confirmar_firmas()">Confirmar</button>
+			</div>
 		</div>
 	</div>
 </div>

@@ -1,8 +1,23 @@
 <script>
-        function download_jnlp(id){
-            console.log("ID: "+id);
-            
-        }
+	function confirmar_firma_abm(archivoadjunto, id){
+		<?php #echo base_url("expedientes/archivos_adjuntos/download_jnlp/".$firma->archivo_adjunto_id."/".$firma->id); ?>
+		console.log(archivoadjunto + ' ' + id);
+		var password = $('input[name="password"]').val();
+		if(password === ''){
+			alert('Ingrese una contraseña');
+		} else {
+			$.post('expedientes/archivos_adjuntos/confirmar_firma', {
+				password : password,
+			}).done(function(data){
+				if(data === 'Valido'){
+					location.href = "./expedientes/archivos_adjuntos/download_jnlp/"+archivoadjunto+"/"+id;
+				} else {
+					alert('Contraseña incorrecta');
+				}
+			});
+		}
+	}
+
 	function activar_firma(id) {
 		$('#firma_id').val(id);
 	}
@@ -132,8 +147,7 @@
 														<?php echo anchor("expedientes/archivos_adjuntos/descargar_clave_publica/$firma->id", '<i class="fa fa-download"></i> Clave Pública', 'class="btn btn-xs btn-default"'); ?>
 													</span>
 												<?php elseif ($firma->usuario_id === $this->session->userdata('user_id') && $firma->estado === 'Solicitada'): ?>
-                                                                                            <a class="btn btn-xs btn-success firmar-btn" href="<?php echo base_url("expedientes/archivos_adjuntos/download_jnlp/".$firma->archivo_adjunto_id."/".$firma->id); ?>"><i class="fa fa-pencil"></i> Firmar</a>
-													<!--<a class="btn btn-xs btn-success" data-toggle="modal" data-target="#modal-firma" onclick="activar_firma(<?php// echo $firma->id; ?>);"><i class="fa fa-pencil"></i> Firmar</a>-->
+                                                	<a class="btn btn-xs btn-success firmar-btn"  data-toggle="modal" data-target="#modal-confirmar" ><i class="fa fa-pencil"></i> Firmar</a>
 													<a class="btn btn-xs btn-danger rechazar-btn" data-toggle="modal" data-target="#modal-rechazar" onclick="rechazar_firma(<?php echo $firma->id; ?>);"><i class="fa fa-ban"></i> Rechazar</a>
 												<?php endif; ?>
 											</td>
@@ -153,29 +167,28 @@
 			</div>
 		</div>
 	</section>
-	<div class="modal fade modal-warning" id="modal-firma" tabindex="-1" role="dialog">
-		<div class="modal-dialog">
-			<div class="modal-content">
-				<?php echo form_open("expedientes/archivos_adjuntos/firmar/$archivo_adjunto->id"); ?>
-				<div class="modal-header">
-					<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-					<h4 class="modal-title">Ingrese contraseña para la clave electrónica</h4>
+
+<div class="modal fade" id="modal-confirmar" tabindex="-1" role="dialog" style="margin-top: 50px;">
+	<div class="modal-dialog">
+		<div class="modal-content">
+			<div class="modal-header">
+				<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+				<h4 class="modal-title">Ingrese contraseña para confirmar</h4>
+			</div>
+			<div class="modal-body">
+				<div class="form-group">
+					<label>Contraseña</label>
+					<input class="form-control" type="password" name="password"/>
 				</div>
-				<div class="modal-body">
-					<div class="form-group">
-						<label>Contraseña</label>
-						<input class="form-control" type="password" name="clave_firma"/>
-					</div>
-				</div>
-				<div class="modal-footer">
-					<button type="button" class="btn btn-default" data-dismiss="modal">Cancelar</button>
-					<input type="hidden" id="firma_id" name="firma_id" value="0">
-					<?php echo form_submit(array('class' => 'btn btn-success pull-right', 'title' => 'Firmar'), 'Firmar'); ?>
-				</div>
-				<?php echo form_close(); ?>
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-default" data-dismiss="modal">Cancelar</button>
+				<button type="button" class="btn btn-primary" data-dismiss="modal" onclick="confirmar_firma_abm(<?= $firma->archivo_adjunto_id; ?>, <?= $firma->id; ?>)">Confirmar</button>
 			</div>
 		</div>
 	</div>
+</div>
+
 	<div class="modal fade" id="modal-rechazar" tabindex="-1" role="dialog">
 		<div class="modal-dialog">
 			<div class="modal-content">
@@ -219,9 +232,7 @@
 </div>
 <script type="text/javascript">
 $(document).ready(function(){
-    $(".firmar-btn").click(function(){        
-        var celda = $(this).parent();
-        celda.html('<span class="primary"><strong>En proceso</strong></span>');
-    });
+
 });
 </script>
+
