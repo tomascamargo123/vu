@@ -614,25 +614,32 @@ class Archivos_adjuntos extends MY_Controller
 			redirect("expedientes/expedientes/ver/$archivo_adjunto->id_expediente");
 		}
 		$this->load->model('perfil_model');
-		$usuario = $this->perfil_model->get(array('id' => $usuario_id));
-		if (empty($usuario))
-		{
-			show_404();
+
+		$usuarios_id = json_decode($post['users'])->id_user;
+		
+		foreach($usuarios_id as $usuario){
+
+
+			$usuario = $this->perfil_model->get(array('id' => $usuario_id));
+			if (empty($usuario))
+			{
+				show_404();
+			}
+			$trans_ok = TRUE;
+					
+					$this->load->model('expedientes/expedientes_model');
+					$trans_ok &= $this->expedientes_model->firma_pendiente($archivo_adjunto->id_expediente,true);
+					
+			$this->load->model('expedientes/firmas_archivos_adjuntos_model');                
+			$trans_ok&= $this->firmas_archivos_adjuntos_model->create(array(
+				'estado' => 'Solicitada',
+				'estado_lectura' => '0', // Como entero lo toma como NULL y da error
+				'fecha_solicitud' => date_format(new DateTime(), 'Y-m-d H:i:s'),
+				'solicitante_id' => $this->session->userdata('user_id'),
+				'archivo_adjunto_id' => $archivo_adjunto->id,
+				'usuario_id' => $usuario->id
+			));
 		}
-		$trans_ok = TRUE;
-                
-                $this->load->model('expedientes/expedientes_model');
-                $trans_ok &= $this->expedientes_model->firma_pendiente($archivo_adjunto->id_expediente,true);
-                
-		$this->load->model('expedientes/firmas_archivos_adjuntos_model');                
-		$trans_ok&= $this->firmas_archivos_adjuntos_model->create(array(
-			'estado' => 'Solicitada',
-			'estado_lectura' => '0', // Como entero lo toma como NULL y da error
-			'fecha_solicitud' => date_format(new DateTime(), 'Y-m-d H:i:s'),
-			'solicitante_id' => $this->session->userdata('user_id'),
-			'archivo_adjunto_id' => $archivo_adjunto->id,
-			'usuario_id' => $usuario->id
-		));
 		if ($trans_ok)
 		{
 			$this->session->set_flashdata('message', 'Se solicitó la firma del documento exitosamente.');

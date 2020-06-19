@@ -119,6 +119,38 @@ function ver_extras_expediente() {
 	}
 }
 
+/*Seleccion multiple de firmantes*/
+var array_user =new Array();
+
+function checkedArray_firmas(id, val){
+	if(val){
+		array_user.push(id);
+	}else if(!val){
+		var pos = array_user.indexOf(id);
+		array_user.splice( pos, 1 );		
+	}
+	
+}
+function borrar_firmas(){
+	array_user = [];
+}
+function enviar_solicitud_firmas(id_archivo_adjunto){
+	
+	var json_solicitud = JSON.stringify({"id_user": array_user});
+	
+	var request = $.ajax({
+		url: "expedientes/Archivos_adjuntos/solicitar_firma/" + id_archivo_adjunto + "/" + array_user[0] ,
+		method: "POST",
+		data: { users : json_solicitud },
+		dataType: "html"
+	});
+	
+		request.done(function() {
+		array_user = [];
+		$('#buscar_usuario_modal').modal('hide');
+	});
+}
+
 /*victor*/
 var array_docs_firmar = new Array();
 $("#btn-firmar-selec").hide();

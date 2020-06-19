@@ -1230,13 +1230,22 @@ class Expedientes extends MY_Controller
 		));
 		$this->load->model('expedientes/archivos_adjuntos_model');
 		$data['adjuntos'] = $this->archivos_adjuntos_model->get_adjuntos($expediente->id);
-    	//var_dump($data['adjuntos']);die();
+		//var_dump($data['adjuntos']);die();
+		
+		//seleccion multiple
+		$select_render = 'function (data, type, full, meta) {
+			if(type === "display") {				
+					data = \'<input type="checkbox" onclick="javascript:checkedArray_firmas(\'+full.id+\', checked)"></input\';
+			}
+			return data;
+		}';
 
 		$tableData_usuarios = array(
 			'columns' => array(
 				array('label' => 'Usuario', 'data' => 'CodiUsua', 'sort' => 'CodiUsua', 'width' => 10),
 				array('label' => 'Nombre', 'data' => 'DetaUsua', 'sort' => 'DetaUsua', 'width' => 95),
-				array('label' => '', 'data' => 'select', 'width' => 5, 'class' => 'dt-body-center', 'responsive_class' => 'all', 'sortable' => 'false', 'searchable' => 'false')
+				//array('label' => '', 'data' => 'select', 'width' => 5, 'class' => 'dt-body-center', 'responsive_class' => 'all', 'sortable' => 'false', 'searchable' => 'false'),
+				array('label' => '', 'data' => 'opciones', 'width' => 5, 'class' => 'dt-body-center', 'responsive_class' => 'all', 'sortable' => 'false', 'searchable' => 'false', 'render' => $select_render)
 			),
 			'table_id' => 'usuarios_table',
 			'source_url' => 'expedientes/usuarios/listar_users_signers_data',
@@ -1245,6 +1254,7 @@ class Expedientes extends MY_Controller
 			'footer' => TRUE,
 			'dom' => 'rtip'
 		);
+		$data['js'][] = 'js/expedientes/expedientes-varios.js';
 		$data['html_table_usuarios'] = buildHTML($tableData_usuarios);
 		$data['js_table_usuarios'] = buildJS($tableData_usuarios);
 
