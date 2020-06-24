@@ -672,14 +672,15 @@
 					<button type="button" class="close" data-dismiss="modal" aria-label="Close">
 						<span aria-hidden="true">×</span>
 					</button>
-					<h4 class="modal-title">Seleccionar usuario a solicitar firma</h4>
+					<h4 class="modal-title">Seleccionar usuarios a solicitar firma</h4>
 				</div>
 				<div class="modal-body">
 					<?php echo $js_table_usuarios; ?>
 					<?php echo $html_table_usuarios; ?>
 				</div>
 				<div class="modal-footer">
-					<button type="button" class="btn btn-default pull-left" data-dismiss="modal">Cerrar</button>
+					<button type="button" class="btn btn-success pull-right" onclick="javascript:enviar_solicitud_firmas(archivo_adjunto_id)">Enviar Solicitud</button>
+					<button type="button" class="btn btn-default pull-left"  onclick="javascript:borrar_firmas()" data-dismiss="modal">Cerrar</button>
 				</div>
 			</div>
 		</div>
