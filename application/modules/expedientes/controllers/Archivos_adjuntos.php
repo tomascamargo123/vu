@@ -598,6 +598,8 @@ class Archivos_adjuntos extends MY_Controller
 
 	public function solicitar_firma($archivo_id = NULL, $usuario_id = NULL)
 	{
+		$post = $this->input->post();
+
 		if (!in_groups($this->grupos_permitidos, $this->grupos) || $archivo_id == NULL || !ctype_digit($archivo_id) || $usuario_id == NULL || !ctype_digit($usuario_id))
 		{
 			show_error('No tiene permisos para la acción solicitada', 500, 'Acción no autorizada');
@@ -617,7 +619,8 @@ class Archivos_adjuntos extends MY_Controller
 
 		$usuarios_id = json_decode($post['users'])->id_user;
 		
-		foreach($usuarios_id as $usuario){
+
+		foreach($usuarios_id as $usuario_id){
 
 
 			$usuario = $this->perfil_model->get(array('id' => $usuario_id));
@@ -639,6 +642,7 @@ class Archivos_adjuntos extends MY_Controller
 				'archivo_adjunto_id' => $archivo_adjunto->id,
 				'usuario_id' => $usuario->id
 			));
+
 		}
 		if ($trans_ok)
 		{
