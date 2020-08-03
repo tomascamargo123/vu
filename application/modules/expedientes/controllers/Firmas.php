@@ -82,6 +82,7 @@ class Firmas extends MY_Controller
 			->where('faa.usuario_id', $this->session->userdata('user_id'))
 			->where("faa.firma is null")
 			->where('faa.estado', 'Solicitada')
+			->where('estado_revision', '1')
 			->add_column('opciones', '<a href="expedientes/expedientes/ver/$2" title="Ver Expediente" class="btn btn-xs btn-primary" style="width: 100px;">Ver Expediente</a><br />'
                                 . '<a href="expedientes/archivos_adjuntos/ver/$1" title="Ver Archivo" class="btn btn-xs btn-success" style="width: 100px;">Ver Archivo</a><br />'
                                 . '<a class="btn btn-xs btn-danger" onclick="rechazar_firma($1,$2, $3);" style="width: 100px;">Rechazar Firma</a>', 'archivo_adjunto_id, id_expediente, id')
@@ -269,6 +270,94 @@ class Firmas extends MY_Controller
 			}
 		}
 	}
+
+	public function revision_archivos(){
+		if (!in_groups($this->grupos_permitidos, $this->grupos))
+		{
+			show_error('No tiene permisos para la acción solicitada', 500, 'Acción no autorizada');
+		}
+		$fecha_render = 'function (data, type, full, meta) {
+				if(type === "display"){
+					if(data){
+						var mDate = moment(data);
+						data = (mDate && mDate.isValid()) ? mDate.format("DD/MM/YYYY (HH:mm)") : "";
+					}
+				}
+				return data;
+			}';
+		$tableData = array(
+			'columns' => array(
+				array('label' => 'Nombre', 'data' => 'nombre', 'sort' => 'nombre', 'width' => 20),
+				array('label' => 'Revisor', 'data' => 'username', 'sort' => 'username', 'width' => 5, 'class' => 'dt-body-left'),
+				array('label' => 'Año', 'data' => 'ano', 'sort' => 'ano', 'width' => 5, 'class' => 'dt-body-right'),
+				array('label' => 'N°', 'data' => 'numero', 'sort' => 'numero', 'width' => 5, 'class' => 'dt-body-right'),
+				array('label' => 'Anexo', 'data' => 'anexo', 'sort' => 'anexo', 'width' => 5, 'class' => 'dt-body-right'),
+				array('label' => '', 'data' => 'opciones', 'width' => 5, 'class' => 'dt-body-center', 'responsive_class' => 'all', 'sortable' => 'false', 'searchable' => 'false')
+			),
+			'table_id' => 'revision_archivos_table',
+			#'order' => array(array(1, 'asc')),
+			'source_url' => 'expedientes/firmas/revision_archivos_data',
+			'reuse_var' => TRUE,
+			'initComplete' => "function (){var r = $('#revision_archivos_table tfoot tr');r.find('th').each(function(){\$(this).css('padding', 8);});$('#revision_archivos_table thead').append(r);$('#search_0').css('text-align', 'center');}",
+			'footer' => TRUE,
+			'dom' => 'rtip'
+		);
+		$data['html_table'] = buildHTML($tableData);
+		$data['js_table'] = buildJS($tableData);
+		$data['error'] = $this->session->flashdata('error');
+		$data['message'] = $this->session->flashdata('message');
+		$data['metodo_visual'] = 'Revision de archivos';
+		$data['box_title'] = 'Revision de archivos';
+		$data['title'] = 'Expedientes - Firmas - Revision de archivos';
+		$data['js'][] = 'js/expedientes/expedientes-varios.js';
+		$this->load_template('expedientes/firmas/revision_archivos', $data);
+	}
+
+	public function revision_archivos_data(){
+		if (!in_groups($this->grupos_permitidos, $this->grupos))
+		{
+			show_error('No tiene permisos para la acción solicitada', 500, 'Acción no autorizada');
+		}
+		$this->datatables
+			->select('
+			firmas_archivos_adjuntos.id,
+			archivoadjunto.id_expediente,
+			archivoadjunto.nombre,
+			users.username,
+			firmas_archivos_adjuntos.archivo_adjunto_id,
+			expediente.ano,
+			expediente.numero,
+			expediente.anexo')
+			->unset_column('firmas_archivos_adjuntos.id')
+			->from('expedientes.firmas_archivos_adjuntos')
+			->join("$this->sigmu_schema.archivoadjunto", 'firmas_archivos_adjuntos.archivo_adjunto_id = archivoadjunto.id')
+			->join("expedientes.users", 'firmas_archivos_adjuntos.id_revisor = users.id')
+			->join("sigmu.expediente", 'archivoadjunto.id_expediente = expediente.id')
+			->where('firmas_archivos_adjuntos.estado_revision', '0')
+			->where("firmas_archivos_adjuntos.id_revisor", $this->session->userdata('user_id'))
+			->add_column('opciones', '<a href="expedientes/archivos_adjuntos/ver/$1" title="Ver Archivo" class="btn btn-xs btn-success" style="width: 100px;">Ver Archivo</a><br />'
+                                . '<a href="expedientes/expedientes/ver/$2" title="Ver Expediente" class="btn btn-xs btn-primary" style="width: 100px;">Ver Expediente</a><br />'
+								. '<a class="btn btn-xs btn-primary" onclick="permitir_firma($1,$2, $3);" style="width: 100px;">Aprobar Firma</a>'
+								. '<a class="btn btn-xs btn-danger" onclick="rechazar_firma($1,$2, $3);" style="width: 100px;">Rechazar Firma</a>', 'archivo_adjunto_id, id_expediente, id');
+		echo $this->datatables->generate();
+	}
 }
+/*
+SELECT
+  firmas_archivos_adjuntos.archivo_adjunto_id,
+  firmas_archivos_adjuntos.id,
+  archivoadjunto.id_expediente,
+  archivoadjunto.nombre,
+  users.username,
+  expediente.ano,
+  expediente.numero,
+  expediente.anexo
+FROM expedientes.firmas_archivos_adjuntos
+  JOIN sigmu.archivoadjunto
+    ON firmas_archivos_adjuntos.archivo_adjunto_id = archivoadjunto.id
+  JOIN expedientes.users
+    ON firmas_archivos_adjuntos.id_revisor = users.id
+  JOIN sigmu.expediente
+    ON archivoadjunto.id_expediente = expediente.id
 /* End of file Firmas.php */
 /* Location: ./application/modules/expedientes/controllers/Firmas.php */

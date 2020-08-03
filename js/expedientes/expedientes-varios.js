@@ -129,7 +129,6 @@ function checkedArray_firmas(id, val){
 		var pos = array_user.indexOf(id);
 		array_user.splice( pos, 1 );		
 	}
-	
 }
 function borrar_firmas(){
 	array_user = [];
@@ -209,3 +208,23 @@ function descargarArchivo(contenidoEnBlob, nombreArchivo) {
     };
     reader.readAsDataURL(contenidoEnBlob);
 };
+
+var pase_id = '';
+function guardar_pase_id(id){
+	pase_id = id;
+}
+
+function confirmar_a_resolucion(){
+	var motivo = $('#motivo_resolucion').val();
+	var usuario = $('select[name="usuario_derivado"]').val();
+	if(pase_id !== '' && motivo !== ""){
+		$.post('expedientes/pases/enviar_a_resolucion/'+pase_id, {
+			motivo: motivo,
+			usuario: usuario
+		});
+		location.reload();
+	} else {
+		alert('Ingrese un motivo');
+	}
+}
+

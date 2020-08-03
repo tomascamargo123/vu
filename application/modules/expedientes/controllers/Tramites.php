@@ -54,6 +54,7 @@ class Tramites extends MY_Controller
 			->select('tramite.id, (CASE tramite.estado WHEN 0 THEN \'Deshabilitado\' ELSE \'Habilitado\' END) as estado, tramite.nombre, (CASE tramite.tipo WHEN 0 THEN \'Externo\' ELSE \'Interno\' END) as tipo, IF(tramite.digital = TRUE, \'\',\'display: none\') as show_circuito')
 			->unset_column('id')
 			->from("$this->sigmu_schema.tramite")
+			->where("tramite.organigrama", $this->session->userdata('organigrama'))
 			->add_column('add', '<a href="expedientes/circuitos/listar/$1" title="Circuito ($2)" style="$3"><i class="fa fa-sitemap"></i></a>', 'id,nombre,show_circuito')
 			->add_column('edit', '<a href="expedientes/tramites/ver/$1" title="Administrar"><i class="fa fa-cogs"></i></a>', 'id');
 
@@ -86,6 +87,7 @@ class Tramites extends MY_Controller
 				'nombre' => $this->input->post('nombre'),
 				'tipo' => $this->input->post('tipo'),
 				'digital' => ($this->input->post('digital') == 'on' ? '1' : '0'),
+				'organigrama' => $this->session->userdata('organigrama')
 			));
 
 			if ($trans_ok)
@@ -346,6 +348,7 @@ class Tramites extends MY_Controller
 				$options['tipo'] = 0;
 				$options['digital'] = 1;
 			} 
+			$options['organigrama'] = $this->session->userdata('organigrama');
 			$options['sort_by'] = 'nombre';
 			$tramites = $this->tramites_model->get($options);
 			$array_tramites = array();

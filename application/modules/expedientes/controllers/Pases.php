@@ -13,6 +13,7 @@ class Pases extends MY_Controller {
         $this->load->model('expedientes/pases_model');
         $this->grupos_permitidos = array('admin', 'expedientes_admin', 'expedientes_supervision', 'expedientes_usuario', 'expedientes_consulta_general');
         $this->grupos_solo_consulta = array('expedientes_consulta_general');
+        $this->grupos_derivadores = array('admin', 'expedientes_admin');
     }
 
     public function listar_pendientes_r() {
@@ -127,7 +128,7 @@ class Pases extends MY_Controller {
                         . '<button title="Rechazar Pase" class="btn btn-xs btn-danger" style="width: 100px;display: $3" onclick="setIdPase($1)" data-toggle="modal" data-target="#confirmacion_rechazo_modal">Rechazar Pase</button>'
                         . '<button title="Enviar a carrito" class="btn btn-xs btn-warning" onclick="f_enviar_a_carrito($2,this)" style="width: 100px;display: $3">Enviar a Carrito</button>', 'id,codigo,show_btn');
                         if($data == ""){
-                            $this->datatables->set_limit(10);
+                            //$this->datatables->set_limit(10);
                         }
         echo $this->datatables->generate();
     }
@@ -219,9 +220,11 @@ class Pases extends MY_Controller {
         $this->datatables
                 ->add_column('opciones', '<a href="expedientes/expedientes/ver/$2" title="Ver" class="btn btn-sm btn-primary" style="width: 100px;">Ver</a><br />'
                         . '<a href="expedientes/pases/enviar/$1/enviar/$2" title="Enviar Pase" class="btn btn-sm btn-success" style="width: 100px;$3">Enviar Pase</a><br />'
-                        . '<a href="javascript:confirmar_accion($1, \'archivar\');" title="Archivar" class="btn btn-sm btn-danger" style="width: 100px;$3">Archivar</a>', 'id, idexpediente, btn_disabled, btn_salir_circuito');
+                        . '<a href="javascript:confirmar_accion($1, \'archivar\');" title="Archivar" class="btn btn-sm btn-danger" style="width: 100px;$3">Archivar</a>',
+                        'id, idexpediente, btn_disabled, btn_salir_circuito');
+                        
                         if($data == ""){
-                            $this->datatables->set_limit(10);
+                            //$this->datatables->set_limit(10);
                         }
         echo $this->datatables->generate();
     }
@@ -249,33 +252,68 @@ class Pases extends MY_Controller {
 					}
 				}
 				return data;
-			}';
-        $tableData = array(
+            }';
+        $derivador = FALSE;
+        if(in_groups($this->grupos_derivadores, $this->grupos)){
+            $derivador = TRUE;
+            $tableData = array(
+                'columns' => array(
+                    array('label' => 'Cód.Barra', 'data' => 'codigo', 'sort' => 'pase.id', 'width' => 5, 'class' => 'dt-body-right dt-body-middle', 'query' => 'where'),
+                    array('label' => 'Año', 'data' => 'ano', 'sort' => 'pase.ano', 'width' => 5, 'class' => 'dt-body-right', 'query' => 'where'),
+                    array('label' => 'Número', 'data' => 'numero', 'sort' => 'pase.numero', 'width' => 5, 'class' => 'dt-body-right', 'query' => 'where'),
+                    array('label' => 'Anexo', 'data' => 'anexo', 'sort' => 'pase.anexo', 'width' => 5, 'class' => 'dt-body-right', 'query' => 'where'),
+                    array('label' => 'Fojas', 'data' => 'fojas', 'sort' => 'pase.fojas', 'width' => 5, 'class' => 'dt-body-right', 'query' => 'where'),
+                    array('label' => 'Origen', 'data' => 'oficina_origen', 'sort' => 'oficina.nombre', 'width' => 12, 'query' => 'like'),
+                    array('label' => 'Trámite', 'data' => 'tramite_nombre', 'sort' => 'tramite.nombre', 'width' => 13, 'query' => 'like'),
+                    array('label' => 'Solicitante / Carátula', 'data' => 'caratula', 'sort' => 'expediente.caratula', 'width' => 15, 'query' => 'like'),
+                    array('label' => 'Objeto', 'data' => 'objeto', 'sort' => 'expediente.objeto', 'width' => 13, 'query' => 'like'),
+                    array('label' => 'Nota', 'data' => 'nota_pase_id', 'sort' => 'nota_pase_id', 'width' => 6, 'class' => 'dt-body-center', 'render' => $nota_render),
+                    array('label' => 'Emisor', 'data' => 'usuario_emisor', 'sort' => 'pase.usuario_emisor', 'width' => 12, 'query' => 'like'),
+                    array('label' => 'Fecha recepción', 'data' => 'fecha_usuario', 'sort' => 'pase.fecha_usuario', 'width' => 12, 'class' => 'dt-body-right', 'render' => $fecha_render),
+                    array('label' => '', 'data' => 'opciones', 'width' => 5, 'class' => 'dt-body-center', 'responsive_class' => 'all', 'sortable' => 'false', 'searchable' => 'false')
+                ),
+                'table_id' => 'pases_table',
+                'order' => array(array(1, 'desc'), array(2, 'desc')),
+                'source_url' => 'expedientes/pases/listar_pendientes_ee_data',
+                'reuse_var' => TRUE,
+                'initComplete' => "function (){var r = $('#pases_table tfoot tr');r.find('th').each(function(){\$(this).css('padding', 8);});$('#pases_table thead').append(r);$('#search_0').css('text-align', 'center');}",
+                'footer' => TRUE,
+                'dom' => 'rtip'
+            );
+
+            $data['html_table'] = buildHTML($tableData);
+            $data['js_table'] = buildJS($tableData);
+        }
+
+        $tableData_derivados = array(
             'columns' => array(
-                array('label' => 'Cód.Barra', 'data' => 'codigo', 'sort' => 'pase.id', 'width' => 5, 'class' => 'dt-body-right dt-body-middle', 'query' => 'where'),
-                array('label' => 'Año', 'data' => 'ano', 'sort' => 'pase.ano', 'width' => 5, 'class' => 'dt-body-right', 'query' => 'where'),
+                array('label' => 'Cód.Barra', 'data' => 'codigo', 'sort' => 'expediente.id', 'width' => 5, 'class' => 'dt-body-right dt-body-middle', 'query' => 'where'),
+                array('label' => 'Año', 'data' => 'ano', 'sort' => 'pase.ano', 'width' => 5, 'class' => 'dt-body-right dt-body-middle', 'query' => 'where'),
                 array('label' => 'Número', 'data' => 'numero', 'sort' => 'pase.numero', 'width' => 5, 'class' => 'dt-body-right', 'query' => 'where'),
                 array('label' => 'Anexo', 'data' => 'anexo', 'sort' => 'pase.anexo', 'width' => 5, 'class' => 'dt-body-right', 'query' => 'where'),
                 array('label' => 'Fojas', 'data' => 'fojas', 'sort' => 'pase.fojas', 'width' => 5, 'class' => 'dt-body-right', 'query' => 'where'),
-                array('label' => 'Origen', 'data' => 'oficina_origen', 'sort' => 'oficina.nombre', 'width' => 12, 'query' => 'like'),
                 array('label' => 'Trámite', 'data' => 'tramite_nombre', 'sort' => 'tramite.nombre', 'width' => 13, 'query' => 'like'),
-                array('label' => 'Solicitante / Carátula', 'data' => 'caratula', 'sort' => 'expediente.caratula', 'width' => 15, 'query' => 'like'),
+                array('label' => 'Carátula', 'data' => 'caratula', 'sort' => 'expediente.caratula', 'width' => 13, 'query' => 'like'),
                 array('label' => 'Objeto', 'data' => 'objeto', 'sort' => 'expediente.objeto', 'width' => 13, 'query' => 'like'),
-                array('label' => 'Nota', 'data' => 'nota_pase_id', 'sort' => 'nota_pase_id', 'width' => 6, 'class' => 'dt-body-center', 'render' => $nota_render),
-                array('label' => 'Emisor', 'data' => 'usuario_emisor', 'sort' => 'pase.usuario_emisor', 'width' => 12, 'query' => 'like'),
-                array('label' => 'Fecha recepción', 'data' => 'fecha_usuario', 'sort' => 'pase.fecha_usuario', 'width' => 12, 'class' => 'dt-body-right', 'render' => $fecha_render),
-                array('label' => '', 'data' => 'opciones', 'width' => 5, 'class' => 'dt-body-center', 'responsive_class' => 'all', 'sortable' => 'false', 'searchable' => 'false')
+                array('label' => 'Motivo', 'data' => 'motivo', 'sort' => 'pase.motivo', 'width' => 13, 'query' => 'like'),
+                ($derivador ? array('label' => 'Usuario', 'data' => 'usuario_derivado', 'sort' => 'pase.usuario_derivado', 'width' => 13, 'query' => 'like') : array('label' => 'Solicitante / Carátula', 'data' => 'caratula', 'sort' => 'expediente.caratula', 'width' => 15, 'query' => 'like')),
+                array('label' => '', 'data' => 'opciones', 'width' => 5, 'class' => 'dt-body-center', 'responsive_class' => 'all', 'sortable' => 'false', 'searchable' => 'false'),
             ),
-            'table_id' => 'pases_table',
+            'table_id' => 'pases_derivados_table',
             'order' => array(array(1, 'desc'), array(2, 'desc')),
-            'source_url' => 'expedientes/pases/listar_pendientes_ee_data',
+            'source_url' => 'expedientes/pases/listar_pendientes_re_data/'.$derivador,
             'reuse_var' => TRUE,
-            'initComplete' => "function (){var r = $('#pases_table tfoot tr');r.find('th').each(function(){\$(this).css('padding', 8);});$('#pases_table thead').append(r);$('#search_0').css('text-align', 'center');}",
+            'initComplete' => "function (){var r = $('#pases_derivados_table tfoot tr');r.find('th').each(function(){\$(this).css('padding', 8);});$('#pases_derivados_table thead').append(r);$('#search_0').css('text-align', 'center');}",
             'footer' => TRUE,
             'dom' => 'rtip'
         );
-        $data['html_table'] = buildHTML($tableData);
-        $data['js_table'] = buildJS($tableData);
+        $this->load->model('expedientes/oficinas_usuarios_model');
+        $usuario_oficina = $this->oficinas_usuarios_model->get_usuario_oficina($this->session->userdata('oficina_actual_id'), $this->session->userdata('user_id'));
+        $data['usuario_oficina'] = $usuario_oficina;
+        $data['derivador'] = $derivador;
+        $data['metodo'] = 'listar_pendiente_ee';
+        $data['html_derivados_table'] = buildHTML($tableData_derivados);
+        $data['js_derivados_table'] = buildJS($tableData_derivados);
         $data['error'] = $this->session->flashdata('error');
         $data['message'] = $this->session->flashdata('message');
         $data['metodo_visual'] = 'Pendientes de emisión';
@@ -315,14 +353,14 @@ class Pases extends MY_Controller {
                 $this->datatables
                 ->add_column('opciones', '<a href="expedientes/expedientes/ver/$2" title="Ver" class="btn btn-sm btn-primary" style="width: 100px;$4">Ver</a>'
                         . '<a href="expedientes/pases/enviar/$1/enviar/$2" title="Enviar Pase" class="btn btn-sm btn-success" style="width: 100px;$3$4">Enviar Pase</a>'
-                        . '<a href="expedientes/pases/revision/view/$1/$6" title="Ver Revision" class="btn btn-sm btn-info" style="width: 100px;$3$5">Ver Revisión</a>', 
+                        . '<a href="expedientes/pases/revision/view/$1/$6" title="Ver Revision" class="btn btn-sm btn-info" style="width: 100px;$3$5">Ver Revisión</a>' 
+                        . '<button onclick="guardar_pase_id($1)" data-toggle="modal" data-target="#confirmacion_resolucion" title="A resolución" class="btn btn-sm btn-info" style="width: 100px;">Derivar a</button>',
                         'id, idexpediente, btn_disabled, btn_hide_btn_others, btn_show_button, revision_id');
                         if($data == ""){
                             //$this->datatables->set_limit(10);
                         }
         echo $this->datatables->generate();
     }
-
     
     public function listar_archivados() {
         if (!in_groups($this->grupos_permitidos, $this->grupos)) {
@@ -774,6 +812,18 @@ class Pases extends MY_Controller {
                 redirect("expedientes/pases/listar_enviados_sinr", 'refresh');
             }
         }
+        $this->load->model('expedientes/expedientes_model');
+        $digital = $this->expedientes_model->get(array(
+            'id' => $id_exp,
+            'select' => 'digital'
+        ))->digital;
+        if(intval($digital) == 1){
+            $resp = $this->pases_model->verificar_firma($id);
+            if(empty($resp)){
+                $this->session->set_flashdata('error', 'Comprobar firma/s en el último archivo');
+                redirect("expedientes/pases/listar_pendientes_ee", 'refresh');
+            }
+        }
         $pase = $this->pases_model->get(array(
             'id' => $id,
             'join' => array(
@@ -813,8 +863,8 @@ class Pases extends MY_Controller {
             //if ($pase->fojas_expediente > $this->input->post('fojas')) {
             //    $error_msg = "El número de fojas no puede ser menor al anterior ($pase->fojas_expediente).";
             //}
-            $resp = $this->db->query("select pase.destino, pase. respuesta from sigmu.pase where pase.id = ".$this->input->post('id'))->result_array();
-            if($tipo == 'enviar' && (($resp[0]['respuesta'] !== 'pendiente' && $resp[0]['respuesta'] !== 'rechazado') || $resp[0]['destino'] > 0) ){
+            $resp = $this->db->query("select pase.destino, pase.respuesta from sigmu.pase where pase.id = ".$this->input->post('id'))->result_array();
+            if($tipo == 'enviar' && (($resp[0]['respuesta'] == 'aceptado' || $resp[0]['respuesta'] == 'finalizado') || $resp[0]['destino'] > 0) ){
                 $this->session->set_flashdata('error', 'El pase ya fue enviado');
                 if($is_digital){
                     redirect("expedientes/pases/listar_pendientes_ee", "refresh");
@@ -934,7 +984,9 @@ class Pases extends MY_Controller {
                                 'contenido' => $pdf_content,
                                 'id_expediente' => $pase->id_expediente,
                                 'descripcion' => 'NULL',
-                                'fecha' => date_format(new DateTime(), 'Y-m-d H:i:s')
+                                'fecha' => date_format(new DateTime(), 'Y-m-d H:i:s'),
+                                'pase_id' => $pase->id,
+                                'orden' => $this->archivos_adjuntos_model->get_orden($id_exp),
                                     ), FALSE);
                                 
                             $num_fojas = $pase->fojas + numeroPaginasPdf($pdf_content);
@@ -1005,6 +1057,9 @@ class Pases extends MY_Controller {
                         $this->db->trans_rollback();
                         $error_msg = 'Se ha producido un error con la base de datos.';
                         $error_msg .='<br>' . $this->pases_model->get_error();
+                        $error_msg .='<br>' . $this->archivos_adjuntos_model->get_error();
+                        $error_msg .='<br>' . $this->fojas_archivos_adjuntos_model->get_error();
+                        $error_msg .='<br>' . $this->expedientes_model->get_error();
                         if ($this->pases_model->get_error()) {
                             $error_msg .='<br>' . $this->pases_model->get_error();
                         }
@@ -2093,7 +2148,252 @@ class Pases extends MY_Controller {
         LIMIT 10'));
     }
 
+    public function enviar_a_resolucion($id = NULL){
+		if($id == NULL){
+			show_404();
+		} else {
+            if (isset($_POST) && !empty($_POST))
+		    {	
+                $this->pases_model->update(array(
+                    'id' => $id,
+                    'destino' => '-3',
+                    'respuesta' => 'aresolver',
+                    'usuario_derivado' => $this->input->post('usuario'),
+                    'motivo' => $this->input->post('motivo'),
+                ));
+            
+                $this->session->set_flashdata('message', $this->pases_model->get_msg());
+                redirect('expedientes/pases/listar_pendientes_ee', 'refresh');
+            }
+		}
+    }
 
+    public function listar_pendientes_re_data($derivador = FALSE) {
+        $data = $this->input->post('data');
+        if (!in_groups($this->grupos_permitidos, $this->grupos)) {
+            show_error('No tiene permisos para la acción solicitada', 500, 'Acción no autorizada');
+        }
+
+        $this->datatables
+                ->select('pase.id, IF(expediente.firma_pendiente = 1, "none", "auto") as btn_disabled, 
+                expediente.id as codigo, pase.ano, pase.numero, pase.anexo, pase.fojas, oficina.nombre 
+                as oficina_origen, pase.fecha_usuario, tramite.nombre as tramite_nombre,
+                expediente.caratula as caratula, expediente.objeto as objeto, pase.usuario_derivado,
+                pase.nota_pase_id, IF(expediente.firma_pendiente = 1 AND tramite.digital = 1, "none", "auto") 
+                as show_btn, pase.motivo, pase.usuario_derivado')
+                ->unset_column('pase.id')
+                ->exact_where_column('ano,numero,anexo')
+                ->from("$this->sigmu_schema.pase")
+                ->join("$this->sigmu_schema.oficina", 'oficina.id = pase.origen', 'inner')
+                ->join("$this->sigmu_schema.expediente", 'expediente.id = pase.id_expediente', 'inner')
+                ->join("$this->sigmu_schema.tramite", 'tramite.id = expediente.tramite_id', 'inner')
+                ->where('pase.respuesta', 'aresolver')
+                ->where('pase.origen', $this->session->userdata('oficina_actual_id'));
+                if(!$derivador){
+                    $this->datatables->where('pase.usuario_derivado', $this->session->userdata('CodiUsua'));
+                }
+                if($data != ""){
+                    $query = json_decode($data, TRUE);
+                    foreach($query as $q){
+                        if($q['query'] == 'like'){
+                            $this->datatables->like($q['name'], $q['value']);
+                        } else {
+                            $this->datatables->where($q['name'], $q['value']);
+                        }
+                    }
+                }
+                $this->datatables
+                ->add_column('opciones', '<a style="width: 100px;" href="expedientes/expedientes/ver/$1" title="Ver" class="btn btn-xs btn-primary">Ver</a><br>'
+                . (!$derivador ? '<a href="expedientes/pases/enviar/$2/enviar/$1" title="Enviar Pase" class="btn btn-sm btn-success" style="width: 100px;display: $3;">Enviar Pase</a>' : '')
+                . ('<a href="expedientes/pases/cancelar_derivar/$2" title="Cancelar derivación" class="btn btn-sm btn-danger" style="width: 100px;">Cancelar</a>'),
+                'codigo, id, btn_disabled');
+                        if($data == ""){
+                            //$this->datatables->set_limit(10);
+                        }
+        echo $this->datatables->generate();
+    }
+
+    public function cancelar_derivar($id_pase = NULL){
+        if($id_pase != NULL){
+            $ultimo_pase = FALSE;
+            $resp = $this->pases_model->get(array(
+                'select' => 'respuesta',
+                'id' => $id_pase
+            ));
+            
+            if($resp->respuesta == 'aresolver'){
+                $ultimo_pase = TRUE;
+            } else {
+                $ultimo_pase = FALSE;
+            }
+            
+            if($ultimo_pase){
+                $this->pases_model->update(
+                    array(
+                        'id' => $id_pase,
+                        'destino' => '-1',
+                        'respuesta' => 'pendiente',
+                        'motivo' => NULL,
+                        'usuario_derivado' => NULL
+                    )
+                );
+            }
+            $this->session->set_flashdata('message', 'Derivación cancelada');
+            redirect('expedientes/pases/listar_pendientes_ee', 'refresh');
+        }
+    }
+
+    public function listar_resueltos($derivador) {
+        $tableData = array(
+            'columns' => array(
+                array('label' => 'Cód.Barra', 'data' => 'codigo', 'sort' => 'expediente.id', 'width' => 5, 'class' => 'dt-body-right dt-body-middle', 'query' => 'where'),
+                array('label' => 'Año', 'data' => 'ano', 'sort' => 'pase.ano', 'width' => 5, 'class' => 'dt-body-right dt-body-middle', 'query' => 'where'),
+                array('label' => 'Número', 'data' => 'numero', 'sort' => 'pase.numero', 'width' => 5, 'class' => 'dt-body-right', 'query' => 'where'),
+                array('label' => 'Anexo', 'data' => 'anexo', 'sort' => 'pase.anexo', 'width' => 5, 'class' => 'dt-body-right', 'query' => 'where'),
+                array('label' => 'Fojas', 'data' => 'fojas', 'sort' => 'pase.fojas', 'width' => 5, 'class' => 'dt-body-right', 'query' => 'where'),
+                array('label' => 'Trámite', 'data' => 'tramite_nombre', 'sort' => 'tramite.nombre', 'width' => 13, 'query' => 'like'),
+                array('label' => 'Carátula', 'data' => 'caratula', 'sort' => 'expediente.caratula', 'width' => 13, 'query' => 'like'),
+                array('label' => 'Objeto', 'data' => 'objeto', 'sort' => 'expediente.objeto', 'width' => 13, 'query' => 'like'),
+                array('label' => 'Motivo', 'data' => 'motivo', 'sort' => 'pase.motivo', 'width' => 13, 'query' => 'like'),
+                ($derivador ? array('label' => 'Usuario', 'data' => 'usuario_derivado', 'sort' => 'pase.usuario_derivado', 'width' => 13, 'query' => 'like') : array('label' => 'Solicitante / Carátula', 'data' => 'caratula', 'sort' => 'expediente.caratula', 'width' => 15, 'query' => 'like')),
+                array('label' => '', 'data' => 'opciones', 'width' => 5, 'class' => 'dt-body-center', 'responsive_class' => 'all', 'sortable' => 'false', 'searchable' => 'false'),
+            ),
+            'table_id' => 'resueltos_table',
+            'order' => array(array(1, 'desc'), array(2, 'desc')),
+            'source_url' => 'expedientes/pases/listar_resueltos_data/'.$derivador,
+            'reuse_var' => TRUE,
+            'initComplete' => "function (){var r = $('#resueltos_table tfoot tr');r.find('th').each(function(){\$(this).css('padding', 8);});$('#resueltos_table thead').append(r);$('#search_0').css('text-align', 'center');}",
+            'footer' => TRUE,
+            'dom' => 'rtip'
+        );
+
+        $html = buildHTML($tableData);
+        $js = buildJS($tableData);
+        echo json_encode(array('html' => $html, 'js' => $js));
+    }
+
+    public function listar_resueltos_data($derivador) {
+        $data = $this->input->post('data');
+        if (!in_groups($this->grupos_permitidos, $this->grupos)) {
+            show_error('No tiene permisos para la acción solicitada', 500, 'Acción no autorizada');
+        }
+        $der = FALSE;
+        if($derivador == 'true'){
+            $der = TRUE;
+        }
+        $this->datatables
+                ->select('pase.id, IF(expediente.firma_pendiente = 1, "none", "auto") as btn_disabled, 
+                expediente.id as codigo, pase.ano, pase.numero, pase.anexo, pase.fojas, oficina.nombre 
+                as oficina_origen, pase.fecha_usuario, tramite.nombre as tramite_nombre,
+                expediente.caratula as caratula, expediente.objeto as objeto, pase.usuario_derivado,
+                pase.nota_pase_id, IF(expediente.firma_pendiente = 1 AND tramite.digital = 1, "none", "auto") 
+                as show_btn, pase.motivo, pase.usuario_derivado')
+                ->unset_column('pase.id')
+                ->exact_where_column('ano, numero, anexo')
+                ->from("$this->sigmu_schema.pase")
+                ->join("$this->sigmu_schema.oficina", 'oficina.id = pase.origen', 'inner')
+                ->join("$this->sigmu_schema.expediente", 'expediente.id = pase.id_expediente', 'inner')
+                ->join("$this->sigmu_schema.tramite", 'tramite.id = expediente.tramite_id', 'inner')
+                ->where('pase.respuesta', 'resuelto')
+                ->where('pase.origen', $this->session->userdata('oficina_actual_id'));
+                if(!$der){
+                    $this->datatables->where('pase.usuario_derivado', $this->session->userdata('CodiUsua'));
+                }
+                if($data != ""){
+                    $query = json_decode($data, TRUE);
+                    foreach($query as $q){
+                        if($q['query'] == 'like'){
+                            $this->datatables->like($q['name'], $q['value']);
+                        } else {
+                            $this->datatables->where($q['name'], $q['value']);
+                        }
+                    }
+                }
+                $this->datatables
+                ->add_column('opciones', '<a style="width: 100px;" href="expedientes/expedientes/ver/$1" title="Ver" class="btn btn-xs btn-primary">Ver</a><br>'
+                . ($der ? '<a href="expedientes/pases/enviar/$2/enviar/$1" title="Enviar Pase" class="btn btn-sm btn-success" style="width: 100px;display: $3;">Enviar Pase</a>' : ''),
+                'codigo, id, btn_disabled');
+                        if($data == ""){
+                            //$this->datatables->set_limit(10);
+                        }
+        echo $this->datatables->generate();
+    }
+
+    public function listar_resolucion($derivador) {
+        $tableData = array(
+            'columns' => array(
+                array('label' => 'Cód.Barra', 'data' => 'codigo', 'sort' => 'expediente.id', 'width' => 5, 'class' => 'dt-body-right dt-body-middle', 'query' => 'where'),
+                array('label' => 'Año', 'data' => 'ano', 'sort' => 'pase.ano', 'width' => 5, 'class' => 'dt-body-right dt-body-middle', 'query' => 'where'),
+                array('label' => 'Número', 'data' => 'numero', 'sort' => 'pase.numero', 'width' => 5, 'class' => 'dt-body-right', 'query' => 'where'),
+                array('label' => 'Anexo', 'data' => 'anexo', 'sort' => 'pase.anexo', 'width' => 5, 'class' => 'dt-body-right', 'query' => 'where'),
+                array('label' => 'Fojas', 'data' => 'fojas', 'sort' => 'pase.fojas', 'width' => 5, 'class' => 'dt-body-right', 'query' => 'where'),
+                array('label' => 'Trámite', 'data' => 'tramite_nombre', 'sort' => 'tramite.nombre', 'width' => 13, 'query' => 'like'),
+                array('label' => 'Carátula', 'data' => 'caratula', 'sort' => 'expediente.caratula', 'width' => 13, 'query' => 'like'),
+                array('label' => 'Objeto', 'data' => 'objeto', 'sort' => 'expediente.objeto', 'width' => 13, 'query' => 'like'),
+                array('label' => 'Motivo', 'data' => 'motivo', 'sort' => 'pase.motivo', 'width' => 13, 'query' => 'like'),
+                ($derivador ? array('label' => 'Usuario', 'data' => 'usuario_derivado', 'sort' => 'pase.usuario_derivado', 'width' => 13, 'query' => 'like') : array('label' => 'Solicitante / Carátula', 'data' => 'caratula', 'sort' => 'expediente.caratula', 'width' => 15, 'query' => 'like')),
+                array('label' => '', 'data' => 'opciones', 'width' => 5, 'class' => 'dt-body-center', 'responsive_class' => 'all', 'sortable' => 'false', 'searchable' => 'false'),
+            ),
+            'table_id' => 'resolucion_table',
+            'order' => array(array(1, 'desc'), array(2, 'desc')),
+            'source_url' => 'expedientes/pases/listar_resolucion_data/'.$derivador,
+            'reuse_var' => TRUE,
+            'initComplete' => "function (){var r = $('#resolucion_table tfoot tr');r.find('th').each(function(){\$(this).css('padding', 8);});$('#resolucion_table thead').append(r);$('#search_0').css('text-align', 'center');}",
+            'footer' => TRUE,
+            'dom' => 'rtip'
+        );
+
+        $html = buildHTML($tableData);
+        $js = buildJS($tableData);
+        echo json_encode(array('html' => $html, 'js' => $js));
+    }
+
+    public function listar_resolucion_data($derivador) {
+        $data = $this->input->post('data');
+        if (!in_groups($this->grupos_permitidos, $this->grupos)) {
+            show_error('No tiene permisos para la acción solicitada', 500, 'Acción no autorizada');
+        }
+        $der = FALSE;
+        if($derivador == 'true'){
+            $der = TRUE;
+        }
+        $this->datatables
+                ->select('pase.id, IF(expediente.firma_pendiente = 1, "none", "auto") as btn_disabled, 
+                expediente.id as codigo, pase.ano, pase.numero, pase.anexo, pase.fojas, oficina.nombre 
+                as oficina_origen, pase.fecha_usuario, tramite.nombre as tramite_nombre,
+                expediente.caratula as caratula, expediente.objeto as objeto, pase.usuario_derivado,
+                pase.nota_pase_id, IF(expediente.firma_pendiente = 1 AND tramite.digital = 1, "none", "auto") 
+                as show_btn, pase.motivo, pase.usuario_derivado')
+                ->unset_column('pase.id')
+                ->exact_where_column('ano, numero, anexo')
+                ->from("$this->sigmu_schema.pase")
+                ->join("$this->sigmu_schema.oficina", 'oficina.id = pase.origen', 'inner')
+                ->join("$this->sigmu_schema.expediente", 'expediente.id = pase.id_expediente', 'inner')
+                ->join("$this->sigmu_schema.tramite", 'tramite.id = expediente.tramite_id', 'inner')
+                ->where('pase.respuesta', 'resolucion')
+                ->where('pase.origen', $this->session->userdata('oficina_actual_id'));
+                if(!$der){
+                    $this->datatables->where('pase.usuario_derivado', $this->session->userdata('CodiUsua'));
+                }
+                if($data != ""){
+                    $query = json_decode($data, TRUE);
+                    foreach($query as $q){
+                        if($q['query'] == 'like'){
+                            $this->datatables->like($q['name'], $q['value']);
+                        } else {
+                            $this->datatables->where($q['name'], $q['value']);
+                        }
+                    }
+                }
+                $this->datatables
+                ->add_column('opciones', '<a style="width: 100px;" href="expedientes/expedientes/ver/$1" title="Ver" class="btn btn-xs btn-primary">Ver</a><br>'
+                . (!$derivador ? '<a href="expedientes/pases/enviar/$2/enviar/$1" title="Enviar Pase" class="btn btn-sm btn-success" style="width: 100px;display: $3;">Enviar Pase</a>' : ''),
+                'codigo, id, btn_disabled');
+                        if($data == ""){
+                            //$this->datatables->set_limit(10);
+                        }
+        echo $this->datatables->generate();
+    }
 }
 
 /* End of file Pases.php */

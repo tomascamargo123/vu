@@ -13,7 +13,7 @@ class Tramites_model extends MY_Model
 		$this->aud_table_name = "{$this->sigmu_schema}_aud.tramite";
 		$this->msg_name = 'Trámite';
 		$this->id_name = 'id';
-		$this->columnas = array('id', 'estado', 'nombre', 'tipo', 'digital');
+		$this->columnas = array('id', 'estado', 'nombre', 'tipo', 'digital', 'organigrama');
 		$this->fields = array(
 			array('name' => 'nombre', 'label' => 'Nombre', 'maxlength' => '255'),
 			array('name' => 'estado', 'label' => 'Estado', 'type' => 'integer', 'maxlength' => '2', 'input_type' => 'combo'),

@@ -85,7 +85,10 @@ class Archivos_adjuntos_model extends MY_Model
 
     public function get_paseId($id_expediente = NULL){
         if($id_expediente != NULL){
-            return $this->db->query("SELECT id FROM sigmu.pase WHERE id_expediente = $id_expediente AND respuesta = 'pendiente';")->result_array();
+            return $this->db->query("SELECT id FROM sigmu.pase WHERE id_expediente = $id_expediente AND (respuesta = 'pendiente'
+            OR respuesta = 'resolucion'
+            OR respuesta = 'resuelto'
+            OR respuesta = 'aresolver');")->result_array();
         }
     }
 
@@ -116,7 +119,33 @@ class Archivos_adjuntos_model extends MY_Model
           WHERE `sigmu`.`archivoadjunto`.`id_expediente` = '$id_expediente'
           GROUP BY nombre) OR (firmas_archivos_adjuntos.id IS NULL AND 
           `sigmu`.`archivoadjunto`.`id_expediente` = '$id_expediente')
-          ORDER BY firmas_archivos_adjuntos.id DESC")->result_array();
+          ORDER BY archivoadjunto.id DESC")->result_array();
+        }
+    }
+
+    public function get_orden($expediente_id){
+        if($expediente_id != NULL){
+            if($this->usa_orden($expediente_id)){
+                $query = "SELECT orden FROM sigmu.archivoadjunto WHERE id_expediente = $expediente_id ORDER BY orden DESC LIMIT 1;";
+                $result = $this->db->query($query)->result_array();
+                if($result[0]['orden'] == ''){
+                    return 1;
+                } else {
+                    return intval($result[0]['orden'])+1;
+                }
+            } else {
+                return 0;
+            }
+        }
+    }
+
+    public function usa_orden($id = NULL){
+        $query = "SELECT COUNT(*) as cant FROM sigmu.archivoadjunto WHERE id_expediente = $id AND orden = 0;";
+        $cant = $this->db->query($query)->result_array();
+        if($cant[0]['cant'] > 0){
+            return FALSE;
+        } else {
+            return TRUE;
         }
     }
 }

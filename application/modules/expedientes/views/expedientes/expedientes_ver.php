@@ -3,6 +3,7 @@
 		$('#contenido_nota').html(nota);
 		$('#contenido_nota_modal').modal();
 	}
+
 	function subir(btn){
 		var fila = $(btn).parent().parent();
 		var val1 = $(fila).find('td:first-child').html();
@@ -18,46 +19,38 @@
 				console.log('asd');
 				if(row.cells[0].innerHTML === val2.toString()){
 					console.log('qwe');
-					row.cells[0].innerHTML = val1;
 					id2 = $(row).attr('id');
+					if($('#'+id1).attr('name') === $('#'+id2).attr('name')){
+						row.cells[0].innerHTML = val1;
+					}
 				}
 			}
-			$(fila).find('td:first-child').html(val2);
-			id1 = id1.slice(8);
-			id2 = id2.slice(8);
-			console.log(id1+' '+id2);
-			$.post('expedientes/expedientes/intercambiar', {
-				id1: id1,
-				val2: val2,
-				id2: id2,
-				val1: val1
-			});
-
-			$('#tbl_adjuntos').DataTable().destroy();
-			$('#tbl_adjuntos').dataTable({
-				paging: false,
-				searching: false,
-				responsive: true,
-				language: {"url": "plugins/datatables/spanish.json"},
-				order: [[ 0, "asc" ]]
-				/*"columnDefs": [
-					{
-						"targets": [ 0 ],
-						"visible": false,
-						"searchable": false
-					}
-				],*/
-			});
+			if($('#'+id1).attr('name') === $('#'+id2).attr('name')){
+				$('#'+id1).after($('#'+id2));
+				$(fila).find('td:first-child').html(val2);
+				id1 = id1.slice(8);
+				id2 = id2.slice(8);
+				console.log(id1+' '+id2);
+				$.post('expedientes/expedientes/intercambiar', {
+					id1: id1,
+					val2: val2,
+					id2: id2,
+					val1: val1
+				});
+			} else {
+				console.log('No puede subir más');
+			}	
 		} else {
 			console.log('No puede subir más');
 		}
 	}
+
 	function bajar(btn){
 		var fila = $(btn).parent().parent();
 		var val1 = $(fila).find('td:first-child').html();
 		var tabla = document.getElementById("tbl_adjuntos");
 		var cant = tabla.rows.length;
-		if (val1 < (cant-1)) {
+		if (val1 < (cant-1) && val1 != 0) {
 			var id1 = $(fila).attr('id');
 			var id2 = 0;
 			var val2 = parseInt(val1)+1;
@@ -68,45 +61,47 @@
 				console.log('asd');
 				if(row.cells[0].innerHTML === val2.toString()){
 					console.log('qwe');
-					row.cells[0].innerHTML = val1;
 					id2 = $(row).attr('id');
+					if($('#'+id1).attr('name') === $('#'+id2).attr('name')){
+						row.cells[0].innerHTML = val1;
+					}
 				}
 			}
-			$(fila).find('td:first-child').html(val2);
-			id1 = id1.slice(8);
-			id2 = id2.slice(8);
-			console.log(id1+' '+id2);
-			$.post('expedientes/expedientes/intercambiar', {
-				id1: id1,
-				val2: val2,
-				id2: id2,
-				val1: val1
-			});
-
-			$('#tbl_adjuntos').DataTable().destroy();
-
-			$('#tbl_adjuntos').dataTable({
-				paging: false,
-				searching: false,
-				responsive: true,
-				language: {"url": "plugins/datatables/spanish.json"},
-				order: [[ 0, "asc" ]]
-				/*"columnDefs": [
-					{
-						"targets": [ 0 ],
-						"visible": false,
-						"searchable": false
-					}
-				],*/
-			});
+			if($('#'+id1).attr('name') === $('#'+id2).attr('name')){
+				$('#'+id2).after($('#'+id1));
+				$(fila).find('td:first-child').html(val2);
+				id1 = id1.slice(8);
+				id2 = id2.slice(8);
+				console.log(id1+' '+id2);
+				$.post('expedientes/expedientes/intercambiar', {
+					id1: id1,
+					val2: val2,
+					id2: id2,
+					val1: val1
+				});
+			} else {
+				console.log('No puede bajar más');
+			}
 		} else {
 			console.log('No puede bajar más');
 		}
 	}
+
 	var archivo_adjunto_id = 0;
 	function solicitar_firma(id) {
 		window.location.href = 'expedientes/archivos_adjuntos/solicitar_firma/' + archivo_adjunto_id + '/' + id;
 	}
+
+	function descargarArchivo_verExp(id, nombre){
+		console.log(id + ' ' + nombre);
+		$.post('expedientes/archivos_adjuntos/vista_preliminar/'+id)
+		.done(function(data){
+			contenido = [];
+			contenido.push(data);
+			descargarArchivo(new Blob(contenido, { type: 'text/plain' }), nombre);
+		});
+	}
+
 	$(document).ready(function () {
 		$('#tbl_anexos, #tbl_acumulados').dataTable({
 			paging: false,
@@ -144,6 +139,15 @@
 			removeLabel: "Eliminar",
 			removeIcon: "<i class=\"glyphicon glyphicon-trash\"></i> ",
 		});
+		$('#usuarios_table').on('click', 'tbody tr',function(){
+			var input = $(this).find('td:eq(2)').find('input:eq(0)');
+			if($(input).prop('checked')){
+				$(input).prop('checked', false);
+			} else {
+				$(input).prop('checked', true);
+			}
+			//checkedArray_firmas($(input).prop('id'), $(input).prop('checked'));
+		});
 	});
 	var id = 0;
 	function adjuntoId(val){
@@ -159,9 +163,7 @@
 			<?php endif;?>
 			})
 		.done(function(){
-			$('#adjunto_'+id).remove();	
-			var val = parseInt($('#cantidad_adjuntos').html(), 10);	
-			$('#cantidad_adjuntos').html(val - 1);
+			location.reload();
 		});
 	}
 
@@ -169,6 +171,42 @@
 		var noti = new Notification( "Notificación" );
 		setTimeout( function() { noti.close() }, 1000)
 	}
+
+	function marca_resuelto(){
+		var motivo = document.getElementById('motivo_resuelto');
+		console.log(motivo.value);
+		$.post( "expedientes/expedientes/marcar_resuelto/<?php echo $expediente->id; ?>", { 
+			motivo: motivo.value,
+		})
+		.done(function(){
+			location.reload();
+		});
+	}
+
+	function marca_resolucion(){
+		var motivo = document.getElementById('motivo_resolucion');
+		console.log(motivo.value);
+		$.post( "expedientes/expedientes/marcar_resolucion/<?php echo $expediente->id; ?>", { 
+			motivo: motivo.value,
+		})
+		.done(function(){
+			location.reload();
+		});
+	}
+
+	function cancelar_firma(){
+		console.log('asdasd  ' + archivo_adjunto_id);
+		$.post( "expedientes/archivos_adjuntos/cancelar_firma", { 
+			id: id,
+			<?php if(!empty($adjuntos[0])): ?>
+			id_expediente: <?= $adjuntos[0]['id_expediente'] ?> 
+			<?php endif;?>
+			})
+		.done(function(){
+			location.reload();
+		});
+	}
+
 </script>
 <div class="content-wrapper">
 	<section class="content-header">
@@ -215,10 +253,16 @@
 							<?php if ($expediente->acumulado > 0): ?>
 								<span style="vertical-align: middle;margin-top: -3px;"class="badge label-warning">- ACUMULADO -</span>
 							<?php endif; ?>
+							<?php if ($pendiente_resolucion != null): ?>
+								<span style="vertical-align: middle;margin-top: -3px;"class="badge label-warning">- PENDIENTE DE RESOLUCIÓN -</span>	
+							<?php endif; ?>
 						</h3>
 						<div class="box-tools pull-right">
 							<button class="btn btn-box-tool" data-widget="collapse"><i class="fa fa-minus"></i></button>
 						</div>
+						<?php if ($motivo != null): ?>
+							<h4>Motivo: <?php echo $motivo ?></h4>
+						<?php endif; ?>
 					</div>
 					<?php $data_submit = array('class' => 'btn btn-primary pull-right', 'title' => $txt_btn); ?>
 					<?php echo form_open(uri_string(), array('data-toggle' => 'validator')); ?>
@@ -427,14 +471,34 @@
 							<?php if ((($ver_expediente || $archivado) && $imprime_caratula) || $acceso_total): ?>
 								<a class="btn btn-primary btn-margin-bottom" target="_blank" href="expedientes/expedientes/pdf_exportar/<?php echo $expediente->id; ?>">Exportar a PDF</a>
 							<?php endif; ?>
-							<?php if (($ver_expediente && $editar_caratula) || $acceso_total): ?>
-								<a class="btn btn-danger btn-margin-bottom" href="#" data-toggle="modal" data-target="#eliminar_modal">Eliminar</a>
-							<?php endif; ?>
+							
 						<?php endif; ?>
 
 						<a class="btn btn-primary btn-margin-bottom" target="_blank" href="expedientes/expedientes/visualizar/<?php echo $expediente->id; ?>">Visualizar</a>
 						
 						<a class="btn btn-primary btn-margin-bottom" target="_blank" href="expedientes/expedientes/generar_reporte_pases/<?php echo $expediente->id; ?>">Reporte de pases</a>
+					<br>
+					<br>
+					
+						<?php if ((($ver_expediente && $editar_caratula) || $acceso_total) && $eliminar_expediente): ?>
+							<a class="btn btn-danger btn-margin-bottom" href="#" data-toggle="modal" data-target="#eliminar_modal">Eliminar</a>
+						<?php endif; ?>
+						<?php if ($rechaza_expediente && $imprime_caratula && ($derivado || $derivador)): ?>
+							<button type="button" class="btn btn-danger btn-margin-bottom" data-toggle="modal" data-target="#rechazar_modal">Rechazar</button>
+						<?php endif; ?>
+						<?php if($derivado): ?>
+							<?php if($estado != "resolucion"): ?>
+								<button type="button" class="btn btn-danger btn-margin-bottom" data-toggle="modal" data-target="#resolucion_modal">A resolución</button>
+							<?php endif; ?>
+							<?php if($estado != "resuelto"): ?>
+								<button type="button" class="btn btn-success btn-margin-bottom" data-toggle="modal" data-target="#resuelto_modal">Resuelto</button>
+							<?php endif; ?>
+						<?php endif; ?> 
+						<?php if($derivado || $derivador): ?>
+							<?php if($estado != "resolver"): ?>
+								<a href="expedientes/pases/enviar/<?php echo $pase_id; ?>/enviar/<?php echo $expediente->id; ?>" title="Enviar Pase" class="btn btn-success btn-margin-bottom" target="_blank">Enviar Pase</a>			
+							<?php endif; ?>
+						<?php endif; ?>
 					</div>
 					<div class="box-footer">
 						<a class="btn btn-default" href="javascript:window.history.back();" title="Volver">Volver</a>
@@ -447,7 +511,13 @@
 						<li><a href="#two2" data-toggle="tab">Anexos (<?php echo empty($anexos) ? 0 : count($anexos); ?>)</a></li>
 						<li><a href="#three2" data-toggle="tab">Acumulados (<?php echo empty($acumulados) ? 0 : count($acumulados); ?>)</a></li>
 						<?php if ($imprime_caratula): ?>
-							<li><a href="#four2" data-toggle="tab">Archivos Adjuntos (<span id="cantidad_adjuntos"><?php echo empty($adjuntos) ? 0 : count($adjuntos); ?></span>)</a></li>
+							<?php if ($derivador): ?>
+								<li><a href="#four2" data-toggle="tab">Archivos Adjuntos (<span id="cantidad_adjuntos"><?php echo empty($adjuntos) ? 0 : count($adjuntos); ?></span>)</a></li>
+							<?php else: ?>
+								<?php if ($derivado): ?>
+									<li><a href="#four2" data-toggle="tab">Archivos Adjuntos (<span id="cantidad_adjuntos"><?php echo empty($adjuntos) ? 0 : count($adjuntos); ?></span>)</a></li>
+								<?php endif; ?>
+							<?php endif; ?>
 						<?php endif; ?>
                                                         <li><a href="#five2" data-toggle="tab">Firmas Pendientes (<?php echo empty($firmas) ? 0 : count($firmas); ?>)</a></li>
 					</ul>   
@@ -561,7 +631,7 @@
 								</table>
 							<?php endif; ?>
 						</div>
-						<?php if ($ver_expediente || $archivado):?>
+						<?php if (($ver_expediente || $archivado) && $es_digital):?>
 							<div class="tab-pane" id="four2">
 								<?php if (empty($adjuntos)): ?>
 									Este expediente aún no tiene archivos adjuntos.<br/>
@@ -586,22 +656,27 @@
 										</thead>
 										<tbody>
 											<?php foreach ($adjuntos as $adjunto): ?>
-												<tr id="adjunto_<?= $adjunto['id'] ?>">
+												<tr id="adjunto_<?= $adjunto['id'] ?>" name="pase_<?= $adjunto['pase_id'] ?>">
 													<td style="display:none;"><?php echo $adjunto['orden'] ?></td>
 													<td><a target="_blank" href="expedientes/archivos_adjuntos/vista_preliminar/<?php echo $adjunto['id']; ?>"><?php echo $adjunto['nombre']; ?></a></td>
 													<td data-order="<?php echo date_format(new DateTime($adjunto['fecha']), 'YmdHis'); ?>"><?php echo date_format(new DateTime($adjunto['fecha']), 'd/m/Y H:i:s'); ?></td>
 													<td><?php echo number_format($adjunto['tamanio'] / 1024, 2) . ' KB'; ?></td>
 													<td>
 														<a style="width: 100px;" target="_blank" class="btn btn-xs btn-primary" href="expedientes/archivos_adjuntos/ver/<?php echo $adjunto['id']; ?>">Ver</a>
-														
 														<?php if($adjunto['firma_pendiente'] == '0'): ?>
-															<button style="width: 100px;" type="button" class="btn btn-xs btn-success" data-toggle="modal" data-target="#buscar_usuario_modal" onclick="archivo_adjunto_id =<?php echo $adjunto['id']; ?>;">Solicitar Firma</button>
+															<?php if(explode('.', $adjunto['nombre'])[1] == 'pdf'): ?>
+																<button style="width: 100px;" type="button" class="btn btn-xs btn-success" data-toggle="modal" data-target="#buscar_usuario_modal" onclick="archivo_adjunto_id =<?php echo $adjunto['id']; ?>;">Solicitar Firma</button>
+															<?php endif;?>
 															<?php if($pase_id == $adjunto['pase_id']): ?>
 																<button style="width: 100px;" type="button" class="btn btn-xs btn-danger" data-toggle="modal" data-target="#eliminar_adjunto_modal"  onclick="javascript:adjuntoId(<?= $adjunto['id'] ?>)">Eliminar</button>
+																<button class="btn btn-default" onclick="subir(this)" id="btn-subir"><i class="fa fa-arrow-up" aria-hidden="true"></i></button>
+																<button class="btn btn-default" onclick="bajar(this)" id="btn-bajar"><i class="fa fa-arrow-down" aria-hidden="true"></i></button>
+															<?php endif;?>
+														<?php else:?>
+															<?php if(explode('.', $adjunto['nombre'])[1] == 'pdf'): ?>
 															<?php endif;?>
 														<?php endif;?>
-														<button class="btn btn-default" onclick="subir(this)" id="btn-subir"><i class="fa fa-arrow-up" aria-hidden="true"></i></button>
-														<button class="btn btn-default" onclick="bajar(this)" id="btn-bajar"><i class="fa fa-arrow-down" aria-hidden="true"></i></button>
+														<button class="btn btn-default" type="button" onclick="descargarArchivo_verExp('<?php echo $adjunto['id'];?>', '<?php echo $adjunto['nombre']; ?>');">Descargar</button>
 													</td>
 												</tr>
 											<?php endforeach; ?>
@@ -672,7 +747,7 @@
 					<button type="button" class="close" data-dismiss="modal" aria-label="Close">
 						<span aria-hidden="true">×</span>
 					</button>
-					<h4 class="modal-title">Seleccionar usuarios a solicitar firma</h4>
+					<h4 class="modal-title">Seleccionar usuario a solicitar firma</h4>
 				</div>
 				<div class="modal-body">
 					<?php echo $js_table_usuarios; ?>
@@ -708,7 +783,8 @@
 	</div>
 <?php endif; ?>
 
-<div class="modal fade" id="eliminar_adjunto_modal">
+<?php if ($rechaza_expediente): ?>
+	<div class="modal fade" id="rechazar_modal">
 		<div class="modal-dialog modal-lg">
 			<div class="modal-content">
 				<div class="modal-header">
@@ -717,12 +793,97 @@
 					<h4 class="modal-title">Confirmar acción</h4>
 				</div>
 				<div class="modal-body">
-                                    <p>¿Esta seguro de <b>eliminar</b> el archivo adjuntado?</p>
+                                    <p>¿Esta seguro de <b>rechazar</b> el expediente?</p>
 				</div>
 				<div class="modal-footer">
-                    <button data-dismiss="modal" onclick="javascript:eliminarArchivo()" class="btn btn-danger">Aceptar</button>
+					<a href="expedientes/expedientes/rechazar_expdigital/<?php echo $expediente->id; ?>" class="btn btn-danger">Aceptar</a>
 					<button type="button" class="btn btn-default pull-left" data-dismiss="modal">Cancel</button>
 				</div>
 			</div>
 		</div>
 	</div>
+<?php endif; ?>
+
+<div class="modal fade" id="eliminar_adjunto_modal">
+	<div class="modal-dialog modal-lg">
+		<div class="modal-content">
+			<div class="modal-header">
+				<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+					<span aria-hidden="true">×</span></button>
+				<h4 class="modal-title">Confirmar acción</h4>
+			</div>
+			<div class="modal-body">
+				<p>¿Esta seguro de <b>eliminar</b> el archivo adjuntado?</p>
+			</div>
+			<div class="modal-footer">
+				<button data-dismiss="modal" onclick="javascript:eliminarArchivo()" class="btn btn-danger">Aceptar</button>
+				<button type="button" class="btn btn-default pull-left" data-dismiss="modal">Cancel</button>
+			</div>
+		</div>
+	</div>
+</div>
+
+<div class="modal fade" id="resuelto_modal">
+	<div class="modal-dialog modal-lg">
+		<div class="modal-content">
+			<div class="modal-header">
+				<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+					<span aria-hidden="true">×</span></button>
+				<h4 class="modal-title">Confirmar acción</h4>
+			</div>
+			<div class="modal-body">
+				<p>¿Esta seguro de marcar este expediente como resuelto?</p>
+				<div class="form-group">
+					<label>Motivo*</label>
+					<input class="form-control" type="text" name="motivo" id="motivo_resuelto"/>
+				</div>
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-danger" onclick="marca_resuelto()">Aceptar</button>
+				<button type="button" class="btn btn-default pull-left" data-dismiss="modal">Cancelar</button>
+			</div>
+		</div>
+	</div>
+</div>
+
+<div class="modal fade" id="resolucion_modal">
+	<div class="modal-dialog modal-lg">
+		<div class="modal-content">
+			<div class="modal-header">
+				<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+					<span aria-hidden="true">×</span></button>
+				<h4 class="modal-title">Confirmar acción</h4>
+			</div>
+			<div class="modal-body">
+				<p>¿Esta seguro de marcar este expediente como pendiente de resolución?</p>
+				<div class="form-group">
+					<label>Motivo*</label>
+					<input class="form-control" type="text" name="motivo" id="motivo_resolucion"/>
+				</div>
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-danger" onclick="marca_resolucion()">Aceptar</button>
+				<button type="button" class="btn btn-default pull-left" data-dismiss="modal">Cancelar</button>
+			</div>
+		</div>
+	</div>
+</div>
+
+<div class="modal fade" id="cancelar_firma_modal">
+	<div class="modal-dialog modal-lg">
+		<div class="modal-content">
+			<div class="modal-header">
+				<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+					<span aria-hidden="true">×</span></button>
+				<h4 class="modal-title">Confirmar acción</h4>
+			</div>
+			<div class="modal-body">
+				<p>¿Esta seguro de <b>cancelar</b> la firma?</p>
+			</div>
+			<div class="modal-footer">
+				<button data-dismiss="modal" onclick="cancelar_firma()" class="btn btn-danger">Aceptar</button>
+				<button type="button" class="btn btn-default pull-left" data-dismiss="modal">Cancelar</button>
+			</div>
+		</div>
+	</div>
+</div>

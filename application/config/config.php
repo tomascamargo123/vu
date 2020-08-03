@@ -25,7 +25,7 @@ $config['login_infogov'] = TRUE;
 | a PHP script and you can easily do that on your own.
 |
 */
-$config['base_url'] = 'http://localhost/vu';
+$config['base_url'] = 'http://localhost/vu-master';
 
 /*
 |--------------------------------------------------------------------------

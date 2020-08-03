@@ -212,6 +212,7 @@ if (!function_exists('load_permisos_nav'))
 			$nav .= '<a href="#"><i class="fa fa-file-text"></i> <span>Expedientes</span> <i class="fa fa-angle-left pull-right"></i></a>';
 			$nav .= '<ul class="treeview-menu">';
 			$nav .= '<li><a href="expedientes/firmas/bandeja"><i class="fa fa-circle-o"></i>Bandeja de Firmas</a></li>';
+			$nav .= '<li><a href="expedientes/firmas/revision_archivos"><i class="fa fa-circle-o"></i>Revisión de archivos</a></li>';
 			$nav .= '<li' . $expedientes_expedientes_active . '><a href="#"><i class="fa fa-circle-o"></i>Expedientes<i class="fa fa-angle-left pull-right"></i></a>';
 			$nav .= '<ul class="treeview-menu">';
 			$nav .= '<li><a href="expedientes/expedientes/iniciar"><i class="fa fa-circle-o"></i>Iniciar expediente</a></li>';
@@ -264,6 +265,7 @@ if (!function_exists('load_permisos_nav'))
 			$nav .= '<a href="#"><i class="fa fa-file-text"></i> <span>Expedientes</span> <i class="fa fa-angle-left pull-right"></i></a>';
 			$nav .= '<ul class="treeview-menu">';
 			$nav .= '<li><a href="expedientes/firmas/bandeja"><i class="fa fa-circle-o"></i>Bandeja de Firmas</a></li>';
+			$nav .= '<li><a href="expedientes/firmas/revision_archivos"><i class="fa fa-circle-o"></i>Revisión de archivos</a></li>';
 			$nav .= '<li' . $expedientes_expedientes_active . '><a href="#"><i class="fa fa-circle-o"></i>Expedientes<i class="fa fa-angle-left pull-right"></i></a>';
 			$nav .= '<ul class="treeview-menu">';
 			$nav .= '<li><a href="expedientes/expedientes/iniciar"><i class="fa fa-circle-o"></i>Iniciar expediente</a></li>';
@@ -278,7 +280,7 @@ if (!function_exists('load_permisos_nav'))
 			$nav .= '<ul class="treeview-menu">';
 			$nav .= '<li><a href="expedientes/pases/listar_pendientes_r"><i class="fa fa-circle-o"></i>Pendientes de recepción</a></li>';
 			$nav .= '<li><a href="expedientes/pases/listar_pendientes_e"><i class="fa fa-circle-o"></i>Pendientes de emisión</a></li>';
-                        $nav .= '<li><a href="expedientes/pases/listar_pendientes_ee"><i class="fa fa-circle-o"></i>Expedientes electronicos</a></li>';
+			$nav .= '<li><a href="expedientes/pases/listar_pendientes_ee"><i class="fa fa-circle-o"></i>Expedientes electronicos</a></li>';
 			$nav .= '<li><a href="expedientes/pases/listar_archivados"><i class="fa fa-circle-o"></i>Archivados</a></li>';
 			$nav .= '<li><a href="expedientes/pases/listar_enviados_sinr"><i class="fa fa-circle-o"></i>Enviados sin recepción</a></li>';
 			$nav .= '</ul>';
@@ -300,6 +302,7 @@ if (!function_exists('load_permisos_nav'))
 			$nav .= '<a href="#"><i class="fa fa-file-text"></i> <span>Expedientes</span> <i class="fa fa-angle-left pull-right"></i></a>';
 			$nav .= '<ul class="treeview-menu">';
 			$nav .= '<li><a href="expedientes/firmas/bandeja"><i class="fa fa-circle-o"></i>Bandeja de Firmas</a></li>';
+			$nav .= '<li><a href="expedientes/firmas/revision_archivos"><i class="fa fa-circle-o"></i>Revisión de archivos</a></li>';
 			$nav .= '<li' . $expedientes_expedientes_active . '><a href="#"><i class="fa fa-circle-o"></i>Expedientes<i class="fa fa-angle-left pull-right"></i></a>';
 			$nav .= '<ul class="treeview-menu">';
 			$nav .= '<li><a href="expedientes/expedientes/iniciar"><i class="fa fa-circle-o"></i>Iniciar expediente</a></li>';
@@ -314,7 +317,7 @@ if (!function_exists('load_permisos_nav'))
 			$nav .= '<ul class="treeview-menu">';
 			$nav .= '<li><a href="expedientes/pases/listar_pendientes_r"><i class="fa fa-circle-o"></i>Pendientes de recepción</a></li>';
 			$nav .= '<li><a href="expedientes/pases/listar_pendientes_e"><i class="fa fa-circle-o"></i>Pendientes de emisión</a></li>';
-                        $nav .= '<li><a href="expedientes/pases/listar_pendientes_ee"><i class="fa fa-circle-o"></i>Expedientes electronicos</a></li>';
+			$nav .= '<li><a href="expedientes/pases/listar_pendientes_ee"><i class="fa fa-circle-o"></i>Expedientes electronicos</a></li>';
 			$nav .= '<li><a href="expedientes/pases/listar_archivados"><i class="fa fa-circle-o"></i>Archivados</a></li>';
 			$nav .= '<li><a href="expedientes/pases/listar_enviados_sinr"><i class="fa fa-circle-o"></i>Enviados sin recepción</a></li>';
 			$nav .= '<li' . $expedientes_pases_active . '><a href="#"><i class="fa fa-circle-o"></i>Tickets<i class="fa fa-angle-left pull-right"></i></a>';	

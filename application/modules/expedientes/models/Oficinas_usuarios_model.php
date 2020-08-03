@@ -55,6 +55,20 @@ class Oficinas_usuarios_model extends MY_Model {
         return $this->db->get_where($this->table_name, array('ID_USUARIO' => $CodiUsua, 'ORDEN' => 1))->result_array();
     }
 
+    public function get_usuario_oficina($id_oficina, $id_user){
+        $query = "SELECT
+        users.id,
+        users.username,
+        CONCAT(users.username, ' - ', UCASE(users.first_name),' ', UCASE(users.last_name)) AS nombre
+        FROM sigmu.usuario_oficina
+        JOIN expedientes.users
+        ON usuario_oficina.ID_USUARIO = users.username
+        WHERE id_oficina = $id_oficina AND users.id != $id_user
+        GROUP BY users.id 
+        ORDER BY nombre ASC;";
+        $result = $this->db->query($query)->result_array();
+        return $result;
+    }
 }
 
 /* End of file Oficinas_usuarios_model.php */

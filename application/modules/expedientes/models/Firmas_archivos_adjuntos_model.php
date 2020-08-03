@@ -11,7 +11,7 @@ class Firmas_archivos_adjuntos_model extends MY_Model
 		$this->table_name = "firmas_archivos_adjuntos";
 		$this->msg_name = 'Firma de archivo adjunto';
 		$this->id_name = 'id';
-		$this->columnas = array('id', 'archivo_adjunto_id', 'usuario_id', 'estado', 'estado_lectura', 'fecha_solicitud', 'solicitante_id', 'fecha_firma', 'firma', 'fecha_rechazo', 'motivo_rechazo');
+		$this->columnas = array('id', 'archivo_adjunto_id', 'usuario_id', 'estado', 'estado_lectura', 'fecha_solicitud', 'solicitante_id', 'fecha_firma', 'firma', 'fecha_rechazo', 'motivo_rechazo', 'id_revisor', 'estado_revision');
 		$this->requeridos = array('archivo_adjunto_id', 'usuario_id', 'estado', 'estado_lectura');
 		//$this->unicos = array();
 	}
@@ -77,7 +77,24 @@ class Firmas_archivos_adjuntos_model extends MY_Model
                 return false;
             }
             
-        }
+		}
+		
+	public function getFirmaId($id_expediente = NULL, $usuario_id){
+		if($id_expediente != NULL){
+			$query = "select 
+			* 
+		  from
+			`expedientes`.`firmas_archivos_adjuntos` 
+		  where `archivo_adjunto_id` in 
+			(select 
+			  id 
+			from
+			  `sigmu`.`archivoadjunto` 
+			where `id_expediente` = $id_expediente) 
+			and `estado` = 'Solicitada' 
+			and `solicitante_id` = $usuario_id ;";
+		}
+	}
 }
 /* End of file Firmas_archivos_adjuntos_model.php */
 /* Location: ./application/modules/expedientes/models/Firmas_archivos_adjuntos_model.php */

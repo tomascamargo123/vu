@@ -469,6 +469,7 @@ class MY_Controller extends CI_Controller
 		$this->load->model('alertas_model');
 		$alerta_firma = $this->alertas_model->TempAlertFirma();
 		$alerta_exp = $this->alertas_model->TempAlertExp();
+		$alerta_rev = $this->alertas_model->TempAlertRevision();
 		$alertas = array(
 			array(
 				'url' => 'expedientes/expedientes/listar',
@@ -492,6 +493,13 @@ class MY_Controller extends CI_Controller
 				'class_name' => 'label-info'
 			),
 			array(
+				'url' => 'expedientes/firmas/revision_archivos',
+				'label' => 'Archivos pendientes de revisión',
+				'value' => $alerta_rev,
+				'icon' => 'fa fa-file',
+				'class_name' => 'label-info'
+			),
+			array(
 				'url' => 'expedientes/pases/listar_pendientes_r',
 				'label' => 'Pases pendientes de recepción',
 				'value' => '&#8226;',
@@ -504,7 +512,7 @@ class MY_Controller extends CI_Controller
 				'value' => '&#8226;',
 				'icon' => 'fa-sign-out',
 				'class_name' => 'label-danger'
-			)
+			),
 		);
 		$this->session->set_userdata('alertas', $alertas);
 		$usuario = array(

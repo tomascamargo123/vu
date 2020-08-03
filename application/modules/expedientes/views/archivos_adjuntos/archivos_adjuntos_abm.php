@@ -95,7 +95,7 @@
 						<div class="form-group">
 							<label>Archivo</label>
 							<p class="form-control-static">
-								<a target="_blank" href="expedientes/archivos_adjuntos/vista_preliminar/<?php echo $archivo_adjunto->id; ?>">Ver / Descargar</a>
+								<a target="_blank" href="expedientes/archivos_adjuntos/vista_preliminar/<?php echo $archivo_adjunto->id; ?>">Ver</a>
 							</p>
 						</div>
 						<div class="form-group">

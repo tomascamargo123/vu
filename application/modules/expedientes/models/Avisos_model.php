@@ -9,11 +9,11 @@ class Avisos_model extends MY_Model
 	{
 		parent::__construct();
 		$this->sigmu_schema = $this->config->item('sigmu_schema');
-		$this->table_name = "$this->sigmu_schema.aviso";
+		$this->table_name = "solicitud_revision";
 		$this->aud_table_name = "{$this->sigmu_schema}_aud.aviso";
-		$this->msg_name = 'Aviso';
+		$this->msg_name = 'solicitud_revision';
 		$this->id_name = 'id';
-		$this->columnas = array('id', 'mensaje', 'activo', 'estado', 'importancia', 'usuario');
+		$this->columnas = array('id', 'archivo_adjunto_id', 'audi_fecha', 'audi_user', 'audi_accion', 'estado');
 		$this->fields = array(
 			array('name' => 'mensaje', 'label' => 'Mensaje', 'maxlength' => '255'),
 			array('name' => 'importancia', 'label' => 'Importancia', 'input_type' => 'combo'),

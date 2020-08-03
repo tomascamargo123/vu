@@ -95,25 +95,102 @@
         <?php 
         }
         ?>
-        <div class="row">
-            <div class="col-xs-12">
-                <div class="box box-primary">
-                    <div class="box-header with-border">
-                        <h3 class="box-title"><?php echo $box_title; ?></h3>
-                        <div class="box-tools pull-right">
-                            <button class="btn btn-box-tool" data-widget="collapse"><i class="fa fa-minus"></i></button>
+        <?php if($metodo == "listar_pendientes_ee"): ?>
+            <?php if($derivador): ?>
+                <div class="row">
+                    <div class="col-xs-12">
+                        <div class="box box-primary">
+                            <div class="box-header with-border">
+                                <h3 class="box-title"><?php echo $box_title; ?></h3>
+                                <div class="box-tools pull-right">
+                                    <button class="btn btn-box-tool" data-widget="collapse"><i class="fa fa-minus"></i></button>
+                                </div>
+                            </div>
+                            <div class="box-body">
+                                <div class="col-md-12" id="col-pases">
+                                    <?php echo $js_table; ?>
+                                    <?php echo $html_table; ?>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                    <div class="box-body">
-                        <div class="col-md-12" id="col-pases">
-                            <?php echo $js_table; ?>
-                            <?php echo $html_table; ?>
+                </div>
+            <?php endif; ?>
+
+            <div class="row">
+                <div class="col-xs-12">
+                    <div class="box box-primary">
+                        <div class="box-header with-border">
+                            <h3 class="box-title"><?php echo 'Pases derivados a usuarios'; ?></h3>
+                            <div class="box-tools pull-right">
+                                <button class="btn btn-box-tool" data-widget="collapse"><i class="fa fa-minus"></i></button>
+                            </div>
+                        </div>
+                        <div class="box-body">
+                            <div class="col-md-12" id="col-pases">
+                                <?php echo $js_derivados_table; ?>
+                                <?php echo $html_derivados_table; ?>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div> 
+
+            <div class="row">
+                <div class="col-xs-12">
+                    <div class="box box-primary collapsed-box">
+                        <div class="box-header with-border">
+                            <h3 class="box-title"><?php echo 'Pases derivados resueltos'; ?></h3>
+                            <div class="box-tools pull-right">
+                                <button id="cargar_table_resuelto" class="btn btn-box-tool" data-widget="collapse"><i class="fa fa-plus"></i></button>
+                            </div>
+                        </div>
+                        <div class="box-body" style="display: none;">
+                            <div class="col-md-12" id="col-pases" name="resueltos">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div> 
+
+            <div class="row">
+                <div class="col-xs-12">
+                    <div class="box box-primary collapsed-box">
+                        <div class="box-header with-border">
+                            <h3 class="box-title"><?php echo 'Pases derivados a resolución'; ?></h3>
+                            <div class="box-tools pull-right">
+                                <button id="cargar_table_resolucion" class="btn btn-box-tool" data-widget="collapse"><i class="fa fa-plus"></i></button>
+                            </div>
+                        </div>
+                        <div class="box-body" style="display: none;">
+                            <div class="col-md-12" id="col-pases" name="resolucion">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div> 
+        <?php else: ?> 
+            <div class="row">
+                <div class="col-xs-12">
+                    <div class="box box-primary">
+                        <div class="box-header with-border">
+                            <h3 class="box-title"><?php echo $box_title; ?></h3>
+                            <div class="box-tools pull-right">
+                                <button class="btn btn-box-tool" data-widget="collapse"><i class="fa fa-minus"></i></button>
+                            </div>
+                        </div>
+                        <div class="box-body">
+                            <div class="col-md-12" id="col-pases">
+                                <?php echo $js_table; ?>
+                                <?php echo $html_table; ?>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
-        </div> 
+        <?php endif; ?>
     </section>
+
 </div>
 <div class="modal fade" id="nota_pase_modal">
     <div class="modal-dialog">
@@ -168,6 +245,39 @@
         </div>
     </div>
 </div>
+<div class="modal fade" id="confirmacion_resolucion">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span></button>
+                <h4 class="modal-title">Confirmar envío</h4>
+            </div>
+            <div class="modal-body">
+                <p>¿Desea derivar este expediente?</p>
+				<div class="form-group">
+					<label>Motivo*</label>
+					<input class="form-control" type="text" name="motivo" id="motivo_resolucion"/>
+
+                    <label>Usuario</label>
+                    <select class="form-control" name="usuario_derivado">
+                        <?php if(isset($usuario_oficina)): ?>
+                            <?php foreach ($usuario_oficina as $usuario){ ?>
+                                <option value="<?php echo $usuario['username'] ?>"><?php echo $usuario['nombre'] ?></option>
+                            <?php } ?>
+                        <?php endif; ?>
+                    </select>
+				</div>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default pull-left" data-dismiss="modal">Cancelar</button>
+                <a data-dismiss="modal" id="link_confirmacion_rechazo" title="Aceptar" class="btn btn-primary pull-right" onclick="confirmar_a_resolucion()">Aceptar</a>
+            </div>
+        </div>
+    </div>
+</div>
+
 <?php
 if ($metodo == "listar_pendientes_r") {
     ?>
@@ -297,7 +407,34 @@ if ($metodo == "listar_pendientes_r") {
             $("#button_rec_"+id).attr({'disabled':'disabled'}).removeAttr('onclick');
             window.location.href= 'expedientes/pases/recibir/'+id;
         }
+
     </script>
     <?php
-}
+} 
+if ($metodo == "listar_pendientes_ee") {
+?>
+    <script>
+        $('#cargar_table_resuelto').one('click', function(){
+            $.post('expedientes/pases/listar_resueltos/'+<?= ($derivador) ? 'true' : 'false' ?>)
+            .done(function(data){
+                var resp = JSON.parse(data);
+                $('div[name="resueltos"]').append(resp.html)
+                $('div[name="resueltos"]').append(resp.js)
+            });
+        });
+
+        $('#cargar_table_resolucion').one('click', function(){
+            $.post('expedientes/pases/listar_resolucion/'+<?= ($derivador) ? 'true' : 'false' ?>)
+            .done(function(data){
+                var resp = JSON.parse(data);
+                $('div[name="resolucion"]').append(resp.html)
+                $('div[name="resolucion"]').append(resp.js)
+            });
+        });
+        
+
+    </script>
+    
+<?php 
+} 
 ?>

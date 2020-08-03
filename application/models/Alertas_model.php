@@ -10,6 +10,23 @@ class Alertas_model extends CI_Model
 		parent::__construct();
 	}
 
+	public function TempAlertRevision(){
+		$pendiente = '';
+		$this->sigmu_schema = $this->config->item('sigmu_schema');
+		$firmas_pend = $this->db->select('COUNT(1) as cantidad')
+		->from('firmas_archivos_adjuntos faa')
+		->where('faa.id_revisor', $this->session->userdata('user_id'))
+		->where("faa.firma is null")
+		->where('faa.estado', 'Solicitada')
+		->where('faa.estado_revision', '0')
+		->get()->row();
+		if ($firmas_pend->cantidad > 0)
+		{
+			$pendiente = '&#8226;';
+		}
+		return $pendiente;
+	}
+
 	public function TempAlertFirma(){
 		$pendiente = '';
 		$this->sigmu_schema = $this->config->item('sigmu_schema');
@@ -18,6 +35,7 @@ class Alertas_model extends CI_Model
 		->where('faa.usuario_id', $this->session->userdata('user_id'))
 		->where("faa.firma is null")
 		->where('faa.estado', 'Solicitada')
+		->where('faa.estado_revision', '1')
 		->get()->row();
 		if ($firmas_pend->cantidad > 0)
 		{

@@ -13,7 +13,10 @@ class Pases_model extends MY_Model
 		//$this->aud_table_name = "{$this->sigmu_schema}_aud.pase";
 		$this->msg_name = 'Pase';
 		$this->id_name = 'id';
-		$this->columnas = array('id', 'id_expediente', 'ano', 'numero', 'anexo', 'fecha', 'origen', 'destino', 'respuesta', 'fojas', 'marca', 'impreso', 'usuario_emisor', 'usuario_receptor', 'usuario', 'terminal', 'fecha_usuario', 'proceso_usuario', 'nota_pase_id','ticket_id','etapa_circuito');
+        $this->columnas = array('id', 'id_expediente', 'ano', 'numero', 'anexo', 'fecha', 'origen', 
+        'destino', 'respuesta', 'fojas', 'marca', 'impreso', 'usuario_emisor', 'usuario_receptor', 
+        'usuario', 'terminal', 'fecha_usuario', 'proceso_usuario', 'nota_pase_id', 'ticket_id', 
+        'etapa_circuito', 'motivo', 'usuario_derivado');
 		$this->fields = array(
 			array('name' => 'fecha_usuario', 'label' => 'Fecha', 'type' => 'datetime', 'readonly' => 'readonly'),
 			array('name' => 'oficina_origen', 'label' => 'Origen', 'readonly' => 'readonly', 'required' => TRUE),
@@ -153,6 +156,45 @@ class Pases_model extends MY_Model
             $query = $this->db->query($sql);
             return $query->result_array();
         }
+
+    public function rechazar_expdigital($resp = NULL){
+        if($resp == NULL){
+            return FALSE;
+        } else {
+            $this->db->trans_start();
+            $id1 = $resp[0]->id;
+            $id2 = $resp[1]->id;
+            $query1 = "DELETE FROM sigmu.pase WHERE id = $id1";
+            $query2 = "UPDATE sigmu.pase SET destino = -1, respuesta = 'pendiente' WHERE id = $id2";
+            $query3 = "SELECT id FROM sigmu.archivoadjunto WHERE pase_id = $id2 ORDER BY id DESC LIMIT 2;";
+            $this->db->query($query1);
+            $this->db->query($query2);
+            $adjunto_pase_id1 = $this->db->query($query3)->result_array()[0]['id'];
+            $adjunto_pase_id2 = $this->db->query($query3)->result_array()[1]['id'];
+            $query4 = "DELETE FROM sigmu.archivoadjunto WHERE id = $adjunto_pase_id1";
+            $this->db->query($query4);
+            $query5 = "DELETE FROM expedientes.fojas_archivos_adjuntos WHERE archivo_adjunto_id = $adjunto_pase_id1";
+            $this->db->query($query5);
+            $query6 = "SELECT foja_hasta FROM expedientes.fojas_archivos_adjuntos WHERE archivo_adjunto_id = $adjunto_pase_id2";
+            $cant_fojas = $this->db->query($query6)->result_array()[0]['foja_hasta'];
+            $query7 = "SELECT id_expediente FROM sigmu.pase WHERE id = $id2";
+            $id_exp = $this->db->query($query7)->result_array()[0]['id_expediente'];
+            $query8 = "UPDATE sigmu.expediente SET fojas = $cant_fojas WHERE id = $id_exp";
+            $this->db->query($query8);
+            $this->db->trans_complete();
+
+            return $this->db->trans_status();
+        }
+    }
+
+    public function verificar_firma($pase_id){
+        $query = "SELECT * FROM expedientes.firmas_archivos_adjuntos 
+        WHERE archivo_adjunto_id = (SELECT id FROM sigmu.archivoadjunto WHERE pase_id = $pase_id ORDER BY id DESC LIMIT 1)";
+        return $this->db->query($query)->result_array();
+    }
+
+    
+
 }
 /* End of file Pases_model.php */
 /* Location: ./application/modules/expedientes/models/Pases_model.php */

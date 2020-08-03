@@ -56,7 +56,7 @@ class Usuarios extends MY_Controller
 				->join('users', "$this->sigmu_schema.usuario.CodiUsua = users.CodiUsua", 'left')
 				->join('users_groups', 'users_groups.user_id = users.id', 'left')
 				->join('groups', 'groups.id = users_groups.group_id', 'left')
-				->where('users.organigrama', $this->session->userdata('organigrama'))
+				//->where('users.organigrama', $this->session->userdata('organigrama'))
 				->group_by('usuario.CodiUsua')
 				->add_column('edit', '<a href="usuarios/ver/$1" title="Administrar"><i class="fa fa-cogs"></i></a>', 'CodiUsua');
 

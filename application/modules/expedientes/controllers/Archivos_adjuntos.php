@@ -73,98 +73,129 @@ class Archivos_adjuntos extends MY_Controller
 		{
 			$cant_archivos = count($archivos['name']);
 		}
-		if ($cant_archivos != 0)
-		{
-			$this->load->library('upload');
-			$this->load->model('expedientes/archivos_adjuntos_model');
-			$pase_id = $this->archivos_adjuntos_model->get_paseId($expediente_id);
-			$this->db->trans_begin();
-			$trans_ok = TRUE;
-			$this->load->library('pdf');
-			$pdf = $this->pdf->load();
-			require_once _MPDF_PATH . 'vendor/setasign/fpdi/fpdi_pdf_parser.php';
-			$pdf->SetImportUse();
-			for ($i = 0; $i < $cant_archivos; $i++)
+		$nombres = $archivos['name'];
+		$todos_pdf = TRUE;
+		foreach($nombres as $nombre){ 			
+			if(explode('.', $nombre)[1] != 'pdf'){ 	
+				if(explode('.', $nombre)[1] != 'txt'){
+					$todos_pdf = FALSE; 
+				}					
+			} 		
+		}
+		if($todos_pdf){ 
+			if ($cant_archivos != 0)
 			{
-				if ($archivos['size'][$i] > 0)
+				$this->load->library('upload');
+				$this->load->model('expedientes/archivos_adjuntos_model');
+                $orden = $this->archivos_adjuntos_model->get_orden($expediente_id);
+				$pase_id = $this->archivos_adjuntos_model->get_paseId($expediente_id);
+				$this->db->trans_begin();
+				$trans_ok = TRUE;
+				$this->load->library('pdf');
+				$pdf = $this->pdf->load();
+				require_once _MPDF_PATH . 'vendor/setasign/fpdi/fpdi_pdf_parser.php';
+				$pdf->SetImportUse();
+				for ($i = 0; $i < $cant_archivos; $i++)
 				{
-					$tmpName = $archivos['tmp_name'][$i];
-					$fp = fopen($tmpName, 'r');
-					$file_content = fread($fp, filesize($tmpName));
-					if ($archivos['type'][$i] !== 'application/pdf')
+					if ($archivos['size'][$i] > 0)
 					{
-						$file_content = addslashes($file_content);
-					}
-					fclose($fp);
-					$pase_id = $this->archivos_adjuntos_model->get_paseId($expediente_id);
-					#var_dump($pase_id[0]['id']);die();
-					$trans_ok&= $this->archivos_adjuntos_model->create(array(
-						'nombre' => $archivos['name'][$i],
-						'pase_id' => $pase_id[0]['id'],
-						'tamanio' => $archivos['size'][$i],
-						'tipodecontenido' => $archivos['type'][$i],
-						'contenido' => $file_content,
-						'id_expediente' => $expediente_id,
-						'descripcion' => 'NULL',
-						'fecha' => date_format(new DateTime(), 'Y-m-d H:i:s'),
-						), FALSE);
-					if ($archivos['type'][$i] === 'application/pdf')
-					{
-						$pagecount = $pdf->SetSourceFile($tmpName);
-						$archivo_adjunto_id = $this->archivos_adjuntos_model->get_row_id();
-						$query_fojas = $this->archivos_adjuntos_model->get(array('select' => 'COALESCE(MAX(foja_hasta),0)+1 as foja_desde',
-							'join' => array(array('table' => 'fojas_archivos_adjuntos', 'where' => 'fojas_archivos_adjuntos.archivo_adjunto_id=archivoadjunto.id')),
-							'id_expediente' => $expediente_id));
-						$foja_desde = $query_fojas[0]->foja_desde;
-						$this->load->model('expedientes/fojas_archivos_adjuntos_model');
-						$trans_ok&= $this->fojas_archivos_adjuntos_model->create(array(
-							'archivo_adjunto_id' => $archivo_adjunto_id,
-							'foja_desde' => $foja_desde,
-							'foja_hasta' => $foja_desde + $pagecount - 1
-							), FALSE);
-						if (FOJA_AUTOMATICA || $this->expedientes_model->is_digital($expediente_id))
+						$tmpName = $archivos['tmp_name'][$i];
+						$fp = fopen($tmpName, 'r');
+						$file_content = fread($fp, filesize($tmpName));
+						if ($archivos['type'][$i] !== 'application/pdf')
 						{
-                                                        $idLastPase = $this->pases_model->getIdUltimoPase($expediente_id);
-							$this->load->model('expedientes/expedientes_model');
-							$trans_ok&= $this->expedientes_model->update(array(
-								'id' => $expediente_id,
-								'fojas' => $foja_desde + $pagecount - 1
-								), FALSE);
-                                                        $trans_ok &= $this->pases_model->update([
-                                                            'id' => $idLastPase,
-                                                            'fojas' => $foja_desde + $pagecount - 1
-                                                        ],TRUE);
+							$file_content = addslashes($file_content);
 						}
+						fclose($fp);
+						$pase_id = $this->archivos_adjuntos_model->get_paseId($expediente_id);
+						#var_dump($pase_id[0]['id']);die();
+                      if($orden > 0){
+						$trans_ok&= $this->archivos_adjuntos_model->create(array(
+							'nombre' => $archivos['name'][$i],
+							'pase_id' => $pase_id[0]['id'],
+							'tamanio' => $archivos['size'][$i],
+							'tipodecontenido' => $archivos['type'][$i],
+							'contenido' => $file_content,
+							'id_expediente' => $expediente_id,
+							'descripcion' => 'NULL',
+							'fecha' => date_format(new DateTime(), 'Y-m-d H:i:s'),
+                            'orden' => $orden,
+							), FALSE);
+                        } else {
+                        $trans_ok&= $this->archivos_adjuntos_model->create(array(
+							'nombre' => $archivos['name'][$i],
+							'pase_id' => $pase_id[0]['id'],
+							'tamanio' => $archivos['size'][$i],
+							'tipodecontenido' => $archivos['type'][$i],
+							'contenido' => $file_content,
+							'id_expediente' => $expediente_id,
+							'descripcion' => 'NULL',
+							'fecha' => date_format(new DateTime(), 'Y-m-d H:i:s')
+							), FALSE);
+					}
+						if ($archivos['type'][$i] === 'application/pdf')
+						{
+							$pagecount = $pdf->SetSourceFile($tmpName);
+							$archivo_adjunto_id = $this->archivos_adjuntos_model->get_row_id();
+							$query_fojas = $this->archivos_adjuntos_model->get(array('select' => 'COALESCE(MAX(foja_hasta),0)+1 as foja_desde',
+								'join' => array(array('table' => 'fojas_archivos_adjuntos', 'where' => 'fojas_archivos_adjuntos.archivo_adjunto_id=archivoadjunto.id')),
+								'id_expediente' => $expediente_id));
+							$foja_desde = $query_fojas[0]->foja_desde;
+							$this->load->model('expedientes/fojas_archivos_adjuntos_model');
+							$trans_ok&= $this->fojas_archivos_adjuntos_model->create(array(
+								'archivo_adjunto_id' => $archivo_adjunto_id,
+								'foja_desde' => $foja_desde,
+								'foja_hasta' => $foja_desde + $pagecount - 1
+								), FALSE);
+							if (FOJA_AUTOMATICA || $this->expedientes_model->is_digital($expediente_id))
+							{
+															$idLastPase = $this->pases_model->getIdUltimoPase($expediente_id);
+								$this->load->model('expedientes/expedientes_model');
+								$trans_ok&= $this->expedientes_model->update(array(
+									'id' => $expediente_id,
+									'fojas' => $foja_desde + $pagecount - 1
+									), FALSE);
+															$trans_ok &= $this->pases_model->update([
+																'id' => $idLastPase,
+																'fojas' => $foja_desde + $pagecount - 1
+															],TRUE);
+							}
+						}
+						$orden = $orden + 1;
 					}
 				}
-			}
-			if ($this->db->trans_status() && $trans_ok)
-			{
-				$this->db->trans_commit();
-				$this->session->set_flashdata('message', 'Archivos adjuntados');
-				redirect("expedientes/expedientes/ver/$expediente_id", 'refresh');
+				if ($this->db->trans_status() && $trans_ok)
+				{
+					$this->db->trans_commit();
+					$this->session->set_flashdata('message', 'Archivos adjuntados');
+					redirect("expedientes/expedientes/ver/$expediente_id", 'refresh');
+				}
+				else
+				{
+					$this->db->trans_rollback();
+					$error_msg = 'Se ha producido un error con la base de datos.';
+					if ($this->archivos_adjuntos_model->get_error())
+					{
+						$error_msg .='<br>' . $this->archivos_adjuntos_model->get_error();
+					}
+					if ($this->fojas_archivos_adjuntos_model->get_error())
+					{
+						$error_msg .='<br>' . $this->fojas_archivos_adjuntos_model->get_error();
+					}
+					$this->session->set_flashdata('error', $error_msg);
+					redirect("expedientes/expedientes/ver/$expediente_id", 'refresh');
+				}
 			}
 			else
 			{
-				$this->db->trans_rollback();
-				$error_msg = 'Se ha producido un error con la base de datos.';
-				if ($this->archivos_adjuntos_model->get_error())
-				{
-					$error_msg .='<br>' . $this->archivos_adjuntos_model->get_error();
-				}
-				if ($this->fojas_archivos_adjuntos_model->get_error())
-				{
-					$error_msg .='<br>' . $this->fojas_archivos_adjuntos_model->get_error();
-				}
-				$this->session->set_flashdata('error', $error_msg);
+				$this->session->set_flashdata('error', 'No se seleccionó ningún archivo para adjuntar');
 				redirect("expedientes/expedientes/ver/$expediente_id", 'refresh');
 			}
+		} else { 			
+			$this->session->set_flashdata('error', 'Sólo puede adjuntar archivos en formato pdf'); 			
+			redirect("expedientes/expedientes/ver/$expediente_id", 'refresh'); 		
 		}
-		else
-		{
-			$this->session->set_flashdata('error', 'No se seleccionó ningún archivo para adjuntar');
-			redirect("expedientes/expedientes/ver/$expediente_id", 'refresh');
-		}
+		
 	}
 
 	public function ver($id = NULL)
@@ -529,8 +560,9 @@ class Archivos_adjuntos extends MY_Controller
 		redirect("expedientes/archivos_adjuntos/ver/$id", 'refresh');
 	}
 
-	public function rechazar_firma($id = NULL, $bandeja = NULL,$idexp)
+	public function rechazar_firma($id = NULL, $bandeja = NULL,$idexp, $firmante = TRUE)
 	{
+		$firm = ($firmante == "TRUE" ? TRUE : FALSE);
 		if (!in_groups($this->grupos_permitidos, $this->grupos) || $id == NULL || !ctype_digit($id))
 		{
 			show_error('No tiene permisos para la acción solicitada', 500, 'Acción no autorizada');
@@ -564,13 +596,16 @@ class Archivos_adjuntos extends MY_Controller
 			}
 			elseif ($usuario->id !== $firma->usuario_id)
 			{
-				$this->session->set_flashdata('error', 'El usuario de la solicitud no coincide con el usuario logueado.');
-				redirect("expedientes/archivos_adjuntos/ver/$id", 'refresh');
+				if($firm){
+					$this->session->set_flashdata('error', 'El usuario de la solicitud no coincide con el usuario logueado.');
+					redirect("expedientes/archivos_adjuntos/ver/$id", 'refresh');
+				}
 			}
 			$trans_ok &= $this->firmas_archivos_adjuntos_model->update(array(
 				'id' => $firma->id,
 				'estado' => 'Rechazada',
 				'estado_lectura' => 1,
+				'estado_revision' => 2,
 				'fecha_rechazo' => (new DateTime())->format('Y-m-d H:i:s'),
 				'motivo_rechazo' => $this->input->post('motivo_rechazo')
 			)); 
@@ -583,7 +618,11 @@ class Archivos_adjuntos extends MY_Controller
 				$this->session->set_flashdata('message', 'Se rechazó la solicitud de firma exitosamente.');
 				if (!empty($bandeja))
 				{
-					redirect("expedientes/firmas/bandeja", 'refresh');
+					if($firm){
+						redirect("expedientes/firmas/bandeja", 'refresh');
+					} else {
+						redirect("expedientes/firmas/revision_archivos", 'refresh');
+					}
 				}
 				else
 				{
@@ -593,7 +632,6 @@ class Archivos_adjuntos extends MY_Controller
 			}
 		}
 		redirect("expedientes/archivos_adjuntos/ver/$id", 'refresh');
-
 	}
 
 	public function solicitar_firma($archivo_id = NULL, $usuario_id = NULL)
@@ -616,33 +654,41 @@ class Archivos_adjuntos extends MY_Controller
 			redirect("expedientes/expedientes/ver/$archivo_adjunto->id_expediente");
 		}
 		$this->load->model('perfil_model');
-
 		$usuarios_id = json_decode($post['users'])->id_user;
 		
 
 		foreach($usuarios_id as $usuario_id){
-
 
 			$usuario = $this->perfil_model->get(array('id' => $usuario_id));
 			if (empty($usuario))
 			{
 				show_404();
 			}
+			
+			
+			$this->load->model('revisor_firmante_model');
+
+			$revisor = $this->revisor_firmante_model->get(array(
+				'id_firmante' => $usuario->id,
+				'select' => 'id_revisor'
+			));
+			var_dump($revisor);
 			$trans_ok = TRUE;
 					
-					$this->load->model('expedientes/expedientes_model');
-					$trans_ok &= $this->expedientes_model->firma_pendiente($archivo_adjunto->id_expediente,true);
+			$this->load->model('expedientes/expedientes_model');
+			$trans_ok &= $this->expedientes_model->firma_pendiente($archivo_adjunto->id_expediente,true);
 					
-			$this->load->model('expedientes/firmas_archivos_adjuntos_model');                
+			$this->load->model('expedientes/firmas_archivos_adjuntos_model');  
 			$trans_ok&= $this->firmas_archivos_adjuntos_model->create(array(
 				'estado' => 'Solicitada',
 				'estado_lectura' => '0', // Como entero lo toma como NULL y da error
 				'fecha_solicitud' => date_format(new DateTime(), 'Y-m-d H:i:s'),
 				'solicitante_id' => $this->session->userdata('user_id'),
 				'archivo_adjunto_id' => $archivo_adjunto->id,
-				'usuario_id' => $usuario->id
+				'usuario_id' => $usuario->id,
+				'id_revisor' => (isset($revisor[0]->id_revisor) ? intval($revisor[0]->id_revisor) : ''),
+				'estado_revision' => (isset($revisor[0]->id_revisor) ? '0' : '1'),
 			));
-
 		}
 		if ($trans_ok)
 		{
@@ -768,34 +814,79 @@ class Archivos_adjuntos extends MY_Controller
 			$this->load->model('expedientes/archivos_adjuntos_model');
 			$this->load->model('expedientes/expedientes_model');
 			$this->load->model('expedientes/pases_model');
-			$adjunto_pdf = $this->archivos_adjuntos_model->get(array('id' => $id, 'tipodecontenido' => 'application/pdf', 'sort_by' => 'id'));
-			$this->load->library('pdf');
-			$pdf = $this->pdf->load();
-			require_once _MPDF_PATH . 'vendor/setasign/fpdi/fpdi_pdf_parser.php';
-			$pdf->SetImportUse();
+			$adjunto_pdf = $this->archivos_adjuntos_model->get(array('id' => $id, 'sort_by' => 'id'));
+			if(explode('.', $adjunto_pdf->nombre)[1] == 'txt'){
+				$this->archivos_adjuntos_model->delete(array('id' => $id), FALSE);
+			} else {
+				$this->load->library('pdf');
+				$pdf = $this->pdf->load();
+				require_once _MPDF_PATH . 'vendor/setasign/fpdi/fpdi_pdf_parser.php';
+				$pdf->SetImportUse();
 
-			$tmp_file = tempnam('tmp', 'tmp');
-			file_put_contents($tmp_file, $adjunto_pdf->contenido);
-			$pagecount = $pdf->SetSourceFile($tmp_file);
+				$tmp_file = tempnam('tmp', 'tmp');
+				file_put_contents($tmp_file, $adjunto_pdf->contenido);
+				$pagecount = $pdf->SetSourceFile($tmp_file);
 
-			$ultimo_pase = $this->pases_model->get(array(
-				'select' => 'id, fojas',
-				'where' => array('id_expediente = ' . $id_expediente),
-				'sort_by' => array('id DESC'),
-				'limit' => 1
-			));			
+				$ultimo_pase = $this->pases_model->get(array(
+					'select' => 'id, fojas',
+					'where' => array('id_expediente = ' . $id_expediente),
+					'sort_by' => array('id DESC'),
+					'limit' => 1
+				));			
 
-			$this->archivos_adjuntos_model->delete(array('id' => $id), FALSE);
+				$this->archivos_adjuntos_model->delete(array('id' => $id), FALSE);
 
-			$this->pases_model->update(array(
-				'id' => $ultimo_pase[0]->id,
-				'fojas' => (intval($ultimo_pase[0]->fojas) - intval($pagecount))
-			));
+				$this->pases_model->update(array(
+					'id' => $ultimo_pase[0]->id,
+					'fojas' => (intval($ultimo_pase[0]->fojas) - intval($pagecount))
+				));
 
-			$this->expedientes_model->update(array(
-				'id' => $id_expediente,
-				'fojas' => (intval($ultimo_pase[0]->fojas) - intval($pagecount))
-			));
+				$this->expedientes_model->update(array(
+					'id' => $id_expediente,
+					'fojas' => (intval($ultimo_pase[0]->fojas) - intval($pagecount))
+				));
+			}
+		}
+	}
+
+	public function permitir_firma($id = NULL)
+	{
+		if (!in_groups($this->grupos_permitidos, $this->grupos) || $id == NULL || !ctype_digit($id))
+		{
+			show_error('No tiene permisos para la acción solicitada', 500, 'Acción no autorizada');
+		}
+		$archivo_adjunto = $this->archivos_adjuntos_model->get(array('id' => $id));
+		if (empty($archivo_adjunto))
+		{
+			show_404();
+		}
+
+		$trans_ok = TRUE;
+		$this->load->model('expedientes/firmas_archivos_adjuntos_model');
+		$firma_id = $this->input->post('permitir_firma_id');
+		$firma = $this->firmas_archivos_adjuntos_model->get(array('id' => $firma_id));
+		if (empty($firma))
+		{
+			show_404();
+		}
+		$trans_ok &= $this->firmas_archivos_adjuntos_model->update(array(
+			'id' => intval($firma_id),
+			'estado_revision' => 1,
+		)); 
+		if ($trans_ok){
+			$this->session->set_flashdata('message', 'Se aprobó la solicitud de firma exitosamente.');
+			redirect("expedientes/firmas/revision_archivos", 'refresh');
+		} else {
+			$this->session->set_flashdata('error', 'Falló en la consulta');
+			redirect("expedientes/firmas/revision_archivos", 'refresh');
+		}
+	}
+
+	public function cancelar_firma(){
+		$id = $this->input->post('id');
+		$id_expediente = $this->input->post('id_expediente');
+		if($id != NULL){
+			
 		}
 	}
 }

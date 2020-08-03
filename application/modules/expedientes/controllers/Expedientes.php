@@ -19,7 +19,8 @@ class Expedientes extends MY_Controller
 		$this->grupos_permitidos = array('admin', 'expedientes_admin', 'expedientes_supervision', 'expedientes_usuario', 'expedientes_consulta_general');
 		$this->grupos_admin = array('admin');
 		$this->grupos_solo_consulta = array('expedientes_consulta_general');
-                $this->grupos_iniciar_exp = array(862,1);
+		$this->grupos_derivadores = array('admin', 'expedientes_admin');
+        $this->grupos_iniciar_exp = array(862,1);
 	}
 
 	public function listar()
@@ -121,11 +122,11 @@ class Expedientes extends MY_Controller
 			}
 		}
 		$this->datatables
-			->where('expediente.ano', date("Y"))
 			->add_column('opciones', '$1', 'id')
 			->add_column('select', '<a data-dismiss="modal" style="width: 100px;" href="" onclick="seleccionar_expediente(\'$1\',\'$2\',\'$3\',\'$4\');" title="Seleccionar"><i class="fa fa-check"></i></a>', 'numero, ano, anexo, nuevo_anexo')
 			->add_column('acumular', '<a style="width: 100px;" href="javascript:acumular_expediente(\'$1\',\'$2\',\'$3\',\'$4\');" title="Acumular"><i class="fa fa-check"></i></a>', 'id, numero, ano, anexo');
 		if($data == ""){
+			$this->datatables->where('expediente.ano', date("Y"));
 			//$this->datatables->set_limit(10);
 		}
 		
@@ -1105,6 +1106,14 @@ class Expedientes extends MY_Controller
 					'columnas' => array('em.numero as madre_numero', 'em.ano as madre_ano', 'em.anexo as madre_anexo')
 				))
 		));
+		$es_digital = $this->expedientes_model->get(array(
+			'select' => 'digital',
+			'id' => $id,
+		));
+		$data['es_digital'] = FALSE;
+		if($es_digital->digital == '1'){
+			$data['es_digital'] = TRUE;
+		}
 		if (empty($expediente))
 		{
 			show_404();
@@ -1201,6 +1210,13 @@ class Expedientes extends MY_Controller
 			'id_expediente' => $expediente->id,
 			'sort_by' => 'id desc'
 		));
+		$motivo = $this->pases_model->get(array(
+			'select' => 'motivo',
+			'id_expediente' => $id,
+			'sort_by' => 'id desc',
+			'limit' => '1'
+		))[0]->motivo;
+		$data['motivo'] = $motivo;
 		if (!empty($data['pases'][0]))
 		{
 			$data['archivado'] = $data['pases'][0]->origen == 1 && $data['pases'][0]->destino == -1;
@@ -1235,7 +1251,7 @@ class Expedientes extends MY_Controller
 		//seleccion multiple
 		$select_render = 'function (data, type, full, meta) {
 			if(type === "display") {				
-					data = \'<input type="checkbox" onclick="javascript:checkedArray_firmas(\'+full.id+\', checked)"></input\';
+					data = \'<input type="checkbox" id=\'+full.id+\' ></input\';
 			}
 			return data;
 		}';
@@ -1257,8 +1273,6 @@ class Expedientes extends MY_Controller
 		$data['js'][] = 'js/expedientes/expedientes-varios.js';
 		$data['html_table_usuarios'] = buildHTML($tableData_usuarios);
 		$data['js_table_usuarios'] = buildJS($tableData_usuarios);
-
-
 
 		$this->load->model('expedientes/pases_model');
 		$pases = $this->pases_model->get(array(
@@ -1320,9 +1334,65 @@ class Expedientes extends MY_Controller
 			'where' => array(
 				'origen = '. $this->session->userdata('oficina_actual_id'),
 				'id_expediente = '. $id, 
-				'respuesta = "pendiente"'
-			)
+				//'respuesta = "pendiente" OR respuesta = "aresolver"'
+			),
+			'sort_by' => 'id DESC',
+			'limit' => '1'
 		))[0]->id;
+		$cant_archivos = $this->archivos_adjuntos_model->get(array(
+			'select' => 'COUNT(*) as cant',
+			'from' => 'sigmu.archivoadjunto',
+			'where' => array(
+				"pase_id = (SELECT
+                   id
+                 FROM sigmu.pase
+                 WHERE id_expediente = $id
+                 ORDER BY id DESC
+                 LIMIT 1)"
+			)
+		))[0]->cant;
+		$cant_pases = $this->pases_model->get(array(
+			'select' => 'COUNT(*) as cant',
+			'from' => 'sigmu.pase',
+			'where' => array(
+				"id_expediente = $id" 
+			),
+		))[0]->cant;
+		$data['rechaza_expediente'] = FALSE;
+		if(intval($cant_archivos) > 0){
+			$data['rechaza_expediente'] = FALSE;
+		} else {
+			if(intval($cant_pases) > 1){
+				$data['rechaza_expediente'] = TRUE;
+			}
+		}
+
+		$resp = $this->pases_model->get(array(
+			'select' => 'usuario_derivado',
+			'id_expediente' => $id,
+			'sort_by' => 'id DESC',
+			'limit' => 1
+		))[0]->usuario_derivado;
+
+		$estado = $this->pases_model->get(array(
+			'select' => 'respuesta',
+			'id_expediente' => $id,
+			'sort_by' => 'id DESC',
+			'limit' => 1
+		))[0]->respuesta;
+		$data['derivado'] = FALSE;
+		if($this->session->userdata('CodiUsua') == $resp){
+			$data['derivado'] = TRUE;
+		}
+		$data['derivador'] = FALSE;
+		if(in_groups($this->grupos_derivadores, $this->grupos)){
+			$data['derivador'] = TRUE;
+		}
+		$data['eliminar_expediente'] = FALSE;
+		if($cant_pases <= 1){
+			$data['eliminar_expediente'] = TRUE;
+		}
+		$data['estado'] = $estado;		
 		$data['organigrama'] = $this->expedientes_model->getExpedienteOrg($id);
 		$data['ver_expediente'] = TRUE;
 		$data['pase_id'] = $pase_id;
@@ -1608,12 +1678,12 @@ class Expedientes extends MY_Controller
 		if (!in_groups($this->grupos_acceso_especial, $this->grupos)){
 			$sitioDeExpediente = $this->expedientes_model->sitioDeExpediente($id);
 			if($sitioDeExpediente[0]['origen'] == $this->session->userdata('oficina_actual_id')){
-				if(in_groups($this->grupos_acceso_especial_reducido, $this->grupos)){
+				/*if(in_groups($this->grupos_acceso_especial_reducido, $this->grupos)){
 					if(!$this->expedientes_model->iniciaExpediente($this->session->userdata('oficina_actual_id'))){
 						$this->session->set_flashdata('error', 'No tiene permiso para imprimir la carátula');
 						redirect("expedientes/expedientes/ver/$id", 'refresh');
 					}
-				}
+				}*/
 			} else {
 				$this->session->set_flashdata('error', 'El expediente no se encuentra en su oficina');
 				redirect("expedientes/expedientes/ver/$id", 'refresh');
@@ -1637,6 +1707,10 @@ class Expedientes extends MY_Controller
 					'columnas' => array('em.numero as madre_numero', 'em.ano as madre_ano', 'em.anexo as madre_anexo')
 				))
 		));
+
+		$this->load->model('expedientes/archivos_adjuntos_model');
+		$orden = $this->archivos_adjuntos_model->get_orden($id);
+		
 		if (empty($expediente))
 		{
 			show_404();
@@ -1693,7 +1767,8 @@ class Expedientes extends MY_Controller
 					'id_expediente' => $expediente->id,
 					'descripcion' => 'NULL',
 					'fecha' => date_format(new DateTime(), 'Y-m-d H:i:s'),
-					'pase_id' => $pase_id
+					'pase_id' => $pase_id,
+					'orden' => $orden,
 					), FALSE);
 				$archivo_adjunto_id = $this->archivos_adjuntos_model->get_row_id();
 
@@ -2496,19 +2571,39 @@ class Expedientes extends MY_Controller
 		}*/
 		$this->load->model('expedientes/archivos_adjuntos_model');
 		$sitioDeExpediente = $this->expedientes_model->sitioDeExpediente($id);
+		$orden = $this->archivos_adjuntos_model->usa_orden($id);
+
 		if(in_groups($this->grupos_admin, $this->grupos) || $sitioDeExpediente[0]['origen'] == $this->session->userdata('oficina_actual_id')){
-			$adjuntos_pdf = $this->archivos_adjuntos_model->get(array(
-				'id_expediente' => $expediente->id, 
-				'tipodecontenido' => 'application/pdf',
-				'sort_by' => 'orden'
-			));
+			if($orden){
+				$adjuntos_pdf = $this->archivos_adjuntos_model->get(array(
+					'id_expediente' => $expediente->id, 
+					'tipodecontenido' => 'application/pdf',
+					'sort_by' => 'orden'
+				));
+			} else {
+				$adjuntos_pdf = $this->archivos_adjuntos_model->get(array(
+					'id_expediente' => $expediente->id, 
+					'tipodecontenido' => 'application/pdf',
+					'sort_by' => 'id'
+				));
+			}
+			
 		} else {
-			$adjuntos_pdf = $this->archivos_adjuntos_model->get(array(
-				'id_expediente' => $expediente->id, 
-				'tipodecontenido' => 'application/pdf',
-				'id <=' => $this->expedientes_model->adjunto_firmado($this->session->userdata('user_id'), $id),
-				'sort_by' => 'orden'
-			));
+			if($orden){
+				$adjuntos_pdf = $this->archivos_adjuntos_model->get(array(
+					'id_expediente' => $expediente->id, 
+					'tipodecontenido' => 'application/pdf',
+					'id <=' => $this->expedientes_model->adjunto_firmado($this->session->userdata('user_id'), $id),
+					'sort_by' => 'orden'
+				));
+			} else {
+				$adjuntos_pdf = $this->archivos_adjuntos_model->get(array(
+					'id_expediente' => $expediente->id, 
+					'tipodecontenido' => 'application/pdf',
+					'id <=' => $this->expedientes_model->adjunto_firmado($this->session->userdata('user_id'), $id),
+					'sort_by' => 'id'
+				));
+			}
 		}
 		$this->load->library('pdf');
                 $pdf = $this->pdf->load();
@@ -2861,27 +2956,76 @@ class Expedientes extends MY_Controller
 		}
 	}
 
-	public function enviar_a_resolucion($id = NULL){
-		if($id == NULL){
-			show_404();
-		} else {
-			if (isset($_POST) && !empty($_POST))
-			{		
-				if ($this->form_validation->run() === TRUE)
-				{
-					$trans_ok = TRUE;
-					$trans_ok&= $this->expedientes_model->update(array(
-						'id' => $id,
-						'destino' => '-3',
-						'respuesta' => 'aresolver',
-					));
-					if ($trans_ok)
-					{
-						$this->session->set_flashdata('message', $this->oficinas_model->get_msg());
-						redirect('expedientes/expedientes/listar', 'refresh');
-					}
-				}
+	public function rechazar_expdigital($id = NULL){
+		if($id != NULL){
+			$this->load->model('expedientes/pases_model');
+			$resp = $this->pases_model->get(array(
+				'select' => 'id',
+				'from' => 'sigmu.pase',
+				'where' => array("id_expediente = $id"),
+				'sort_by' => 'id desc',
+				'limit' => 2
+			));
+			$result = $this->pases_model->rechazar_expdigital($resp);
+			if($result){
+				$this->session->set_flashdata('message', 'Expediente rechazado correctamente');
+				redirect('expedientes/pases/listar_pendientes_ee', 'refresh');
+			} else {
+				$this->session->set_flashdata('error', 'Error al rechazar el expediente');
+				redirect('expedientes/expedientes/ver/'.$id, 'refresh');
 			}
+		} else {
+			show_404();
+		}
+	}
+
+	public function marcar_resuelto($id = NULL){
+		//SELECT id FROM pase WHERE id_expediente = $id ORDER BY id DESC LIMIT 1
+		//UPDATE pase SET respuesta = 'resuelto', destino = '-4' WHERE id = 
+		if($id  != NULL){
+			$motivo = $this->input->post('motivo');
+			$this->load->model('expedientes/pases_model');
+			$id_pase = $this->pases_model->get(array(
+				'select' => 'id',
+				'id_expediente' => $id,
+				'sort_by' => 'id desc',
+				'limit' => '1'
+			))[0]->id;
+
+			$this->pases_model->update(array(
+				'id' => $id_pase,
+				'destino' => '-4',
+				'respuesta' => 'resuelto',
+				'motivo' => $motivo
+			));
+
+			$this->session->set_flashdata('message', 'Estado de expediente actualizado');
+
+		}
+	}
+
+	public function marcar_resolucion($id = NULL){
+		//SELECT id FROM pase WHERE id_expediente = $id ORDER BY id DESC LIMIT 1
+		//UPDATE pase SET respuesta = 'resuelto', destino = '-4' WHERE id = 
+		if($id  != NULL){
+			$motivo = $this->input->post('motivo');
+			$this->load->model('expedientes/pases_model');
+			$id_pase = $this->pases_model->get(array(
+				'select' => 'id',
+				'id_expediente' => $id,
+				'sort_by' => 'id desc',
+				'limit' => '1'
+			))[0]->id;
+
+			$this->pases_model->update(array(
+				'id' => $id_pase,
+				'destino' => '-5',
+				'respuesta' => 'resolucion',
+				'motivo' => $motivo
+			));
+
+			$this->session->set_flashdata('message', 'Estado de expediente actualizado');
+
 		}
 	}
 }

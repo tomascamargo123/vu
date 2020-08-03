@@ -4,7 +4,6 @@
             <img width="500" src="img/expedientes/municipalidad_marca.png">
 	</p>
 	<br />
-	<br />
 	<p style="height:30pt;">
 	<barcode code="<?php echo "|$expediente->id"; ?>" type="EAN128B" size="1" class="barcode" height="1.5"/>
 	<br /><?php echo $expediente->id; ?>
