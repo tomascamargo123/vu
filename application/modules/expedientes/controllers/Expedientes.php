@@ -2638,9 +2638,44 @@ class Expedientes extends MY_Controller
 				for ($i = 1; $i <= $pagecount; $i++)
 				{
 					$pagina++;
-					$pdf->AddPage();
-					$import_page = $pdf->ImportPage($i);
-					$pdf->UseTemplate($import_page);
+					$templateId = $pdf->importPage($i);
+			
+					$size = $pdf->getTemplateSize($templateId);
+							
+					if ($size['w'] > $size['h']) {
+						$pdf->AddPage('L', array($size['w'], $size['h']));
+					} else {
+						if ( $size['h'] < 300 ){
+							$pdf->AddPage('P', array($size['w'], $size['h']));
+						}else{	
+
+						$pdf->AddPageByArray(array(
+							'orientation' => 'P',
+							'condition' => '',
+							'resetpagenum' => '',
+							'pagenumstyle' => '',
+							'suppress' => '',
+							'mgl' => '',
+							'mgr' => '',
+							'mgt' => '',
+							'mgb' => '',
+							'mgh' => '',
+							'mgf' => '',
+							'ohname' => '',
+							'ehname' => '',
+							'ofname' => '',
+							'efname' => '',
+							'ohvalue' => 0,
+							'ehvalue' => 0,
+							'ofvalue' => 0,
+							'efvalue' => 0,
+							'pagesel' => '',
+							'newformat' => array($size['w'], $size['h']),
+						));
+						}			
+					}
+
+					$pdf->useTemplate($templateId);
 					$pdf->WriteHTML('<div style="position:absolute;top:83px;width:80px;float:right;right:57px;text-align:center;font-size:24px">' . ($pagina - 1) . '</div>');
 					$pdf->WriteHTML('<img style="position:absolute; float:right;" src="img/expedientes/folio.png"/>');
 					if (!empty($firmas_adjunto))
@@ -2767,9 +2802,45 @@ class Expedientes extends MY_Controller
 				for ($i = 1; $i <= $pagecount; $i++)
 				{
 					$pagina++;
-					$pdf->AddPage();
-					$import_page = $pdf->ImportPage($i);
-					$pdf->UseTemplate($import_page);
+					
+					$templateId = $pdf->importPage($i);
+			
+					$size = $pdf->getTemplateSize($templateId);
+					var_dump($size); die();
+					if ($size['w'] > $size['h']) {
+						$pdf->AddPage('L', array($size['w'], $size['h']));
+					} else {
+						if ( $size['h'] < 300 ){
+							$pdf->AddPage('P', array($size['w'], $size['h']));
+						}else{						
+						$pdf->AddPageByArray(array(
+							'orientation' => '',
+							'condition' => '',
+							'resetpagenum' => '',
+							'pagenumstyle' => '',
+							'suppress' => '',
+							'mgl' => '',
+							'mgr' => '',
+							'mgt' => '',
+							'mgb' => '',
+							'mgh' => '',
+							'mgf' => '',
+							'ohname' => '',
+							'ehname' => '',
+							'ofname' => '',
+							'efname' => '',
+							'ohvalue' => 0,
+							'ehvalue' => 0,
+							'ofvalue' => 0,
+							'efvalue' => 0,
+							'pagesel' => '',
+							'newformat' => array($size['w'], $size['h']),
+						));
+						}			
+					}
+
+					$pdf->useTemplate($templateId);
+	
 					$pdf->WriteHTML('<div style="position:absolute;top:83px;width:80px;float:right;right:57px;text-align:center;font-size:24px">' . ($pagina - 1) . '</div>');
 					$pdf->WriteHTML('<img style="position:absolute; float:right;" src="img/expedientes/folio.png"/>');
 					
