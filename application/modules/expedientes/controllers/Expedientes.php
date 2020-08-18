@@ -2643,7 +2643,29 @@ class Expedientes extends MY_Controller
 					$size = $pdf->getTemplateSize($templateId);
 							
 					if ($size['w'] > $size['h']) {
-						$pdf->AddPage('L', array($size['w'], $size['h']));
+						$pdf->AddPageByArray(array(
+							'orientation' => 'L',
+							'condition' => '',
+							'resetpagenum' => '',
+							'pagenumstyle' => '',
+							'suppress' => '',
+							'mgl' => '',
+							'mgr' => '',
+							'mgt' => '',
+							'mgb' => '',
+							'mgh' => '',
+							'mgf' => '',
+							'ohname' => '',
+							'ehname' => '',
+							'ofname' => '',
+							'efname' => '',
+							'ohvalue' => 0,
+							'ehvalue' => 0,
+							'ofvalue' => 0,
+							'efvalue' => 0,
+							'pagesel' => '',
+							'newformat' => array($size['w'], $size['h']),
+						));
 					} else {
 						if ( $size['h'] < 300 ){
 							$pdf->AddPage('P', array($size['w'], $size['h']));
