@@ -128,6 +128,9 @@ if (!function_exists('buildJS'))
 				if(id === "requerimientos_table"){
 					changeStyles();
 				}
+				if(id === "usuarios_table"){
+					comprobarSeleccionados();
+				}
 				/*if (Math.ceil((this.fnSettings().fnRecordsDisplay()) / this.fnSettings()._iDisplayLength) > 1) {
 					$("#'.$tableData['table_id'].'_paginate").css("display", "block");     
 				} else {                

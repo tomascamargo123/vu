@@ -9,10 +9,10 @@ class Archivos_adjuntos_model extends MY_Model
 	{
 		parent::__construct();
 		$this->sigmu_schema = $this->config->item('sigmu_schema');
-		$this->table_name = "$this->sigmu_schema.archivoadjunto";
+		$this->table_name = "$this->sigmu_schema.archivoadjunto_alt";
 		$this->msg_name = 'Archivo adjunto';
 		$this->id_name = 'id';
-		$this->columnas = array('id', 'nombre', 'tamanio', 'tipodecontenido', 'contenido', 'id_expediente', 'descripcion', 'fecha', 'pase_id', 'orden');
+		$this->columnas = array('id', 'nombre', 'tamanio', 'tipodecontenido', 'ubicacion', 'id_expediente', 'descripcion', 'fecha', 'pase_id', 'orden');
 		$this->fields = array(
 			array('name' => 'nombre', 'label' => 'Nombre', 'maxlength' => '255'),
 			array('name' => 'tamanio', 'label' => 'Tamaño', 'type' => 'integer', 'maxlength' => '20'),
@@ -116,10 +116,39 @@ class Archivos_adjuntos_model extends MY_Model
           FROM expedientes.firmas_archivos_adjuntos 
           RIGHT JOIN sigmu.archivoadjunto 
           ON firmas_archivos_adjuntos.archivo_adjunto_id = archivoadjunto.id
-          WHERE `sigmu`.`archivoadjunto`.`id_expediente` = '$id_expediente'
-          GROUP BY nombre) OR (firmas_archivos_adjuntos.id IS NULL AND 
-          `sigmu`.`archivoadjunto`.`id_expediente` = '$id_expediente')
+          WHERE `sigmu`.`archivoadjunto`.`id_expediente` = '$id_expediente') OR 
+          (`sigmu`.`archivoadjunto`.`id_expediente` = '$id_expediente')
           ORDER BY archivoadjunto.id DESC")->result_array();
+        }
+    }
+
+    public function get_adjuntos_alt($id_expediente = NULL){
+        if($id_expediente != NULL){
+            return $this->db->query("SELECT
+            `archivoadjunto_alt`.`id`,
+            `archivoadjunto_alt`.`nombre`,
+            `archivoadjunto_alt`.`tamanio`,
+            `archivoadjunto_alt`.`tipodecontenido`,
+            `archivoadjunto_alt`.`pase_id`,
+            `archivoadjunto_alt`.`id_expediente`,
+            `archivoadjunto_alt`.`fecha`,
+            `archivoadjunto_alt`.`orden`,
+            firmas_archivos_adjuntos.estado,
+            CASE 
+            WHEN estado = 'Solicitada' THEN 1
+            ELSE 0
+            END AS firma_pendiente
+          FROM `sigmu`.`archivoadjunto_alt`
+            LEFT JOIN `expedientes`.`firmas_archivos_adjuntos`
+              ON `archivoadjunto_alt`.`id` = `firmas_archivos_adjuntos`.`archivo_adjunto_id`
+          WHERE firmas_archivos_adjuntos.id IN (SELECT
+            MAX(firmas_archivos_adjuntos.id)
+          FROM expedientes.firmas_archivos_adjuntos 
+          RIGHT JOIN sigmu.archivoadjunto_alt 
+          ON firmas_archivos_adjuntos.archivo_adjunto_id = archivoadjunto_alt.id
+          WHERE `sigmu`.`archivoadjunto_alt`.`id_expediente` = '$id_expediente') OR 
+          (`sigmu`.`archivoadjunto_alt`.`id_expediente` = '$id_expediente')
+          ORDER BY archivoadjunto_alt.id DESC")->result_array();
         }
     }
 

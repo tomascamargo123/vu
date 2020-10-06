@@ -36,6 +36,7 @@ class Usuarios extends MY_Controller
         
 	public function listar_users_signers_data()
 	{
+		$data = $this->input->post('data');
 		if (!in_groups($this->grupos_permitidos, $this->grupos))
 		{
 			show_error('No tiene permisos para la acción solicitada', 500, 'Acción no autorizada');
@@ -46,8 +47,17 @@ class Usuarios extends MY_Controller
 			->where('CodiUsua IS NOT NULL')
 			->where('firma_digital',true)
 			->where('organigrama', $this->session->userdata('organigrama'))
-			->add_column('select', '<a data-dismiss="modal" href="$1" onclick="solicitar_firma($1);" title="Solicitar Firma"><i class="fa fa-check"></i></a>', 'id');
-
+			->add_column('opciones', '<a data-dismiss="modal" href="$1" onclick="solicitar_firma($1);" title="Solicitar Firma"><i class="fa fa-check"></i></a>', 'id');
+			if($data != ""){
+				$query = json_decode($data, TRUE);
+				foreach($query as $q){
+					if($q['query'] == 'like'){
+						$this->datatables->like($q['name'], $q['value']);
+					} else {
+						$this->datatables->where($q['name'], $q['value']);
+					}
+				}
+			}
 		echo $this->datatables->generate();
 	}
 }

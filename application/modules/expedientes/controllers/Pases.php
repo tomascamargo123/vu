@@ -817,13 +817,13 @@ class Pases extends MY_Controller {
             'id' => $id_exp,
             'select' => 'digital'
         ))->digital;
-        if(intval($digital) == 1){
+        /*if(intval($digital) == 1){
             $resp = $this->pases_model->verificar_firma($id);
             if(empty($resp)){
                 $this->session->set_flashdata('error', 'Comprobar firma/s en el último archivo');
                 redirect("expedientes/pases/listar_pendientes_ee", 'refresh');
             }
-        }
+        }*/
         $pase = $this->pases_model->get(array(
             'id' => $id,
             'join' => array(
@@ -1577,6 +1577,12 @@ class Pases extends MY_Controller {
         $this->load->model('circuito_model');
         $con_firma = false;
         $circuito = $this->circuito_model->getCircuito($array_tmp['plantilla_id'], $array_tmp['tramite_id']);
+        
+        $this->load->model('revisor_firmante_model');
+        $revisor = $this->revisor_firmante_model->get(array(
+            'id_firmante' => $usuario->id,
+            'select' => 'id_revisor'
+        ));   
         if (!empty($circuito['firmantes'])){
             //existen firmas a solicitar
             $con_firma = true;
@@ -1588,7 +1594,9 @@ class Pases extends MY_Controller {
                 'fecha_solicitud' => date_format(new DateTime(), 'Y-m-d H:i:s'),
                 'estado_lectura' => '0',
                 'estado' => 'Solicitada',
-                'pase_id' => $this->circuito_model->ultimoPase($revision->id_expediente)['id']
+                'pase_id' => $this->circuito_model->ultimoPase($revision->id_expediente)['id'],
+                'id_revisor' => (isset($revisor[0]->id_revisor) ? intval($revisor[0]->id_revisor) : ''),
+				'estado_revision' => (isset($revisor[0]->id_revisor) ? '0' : '1'),
             );
             if (!$this->circuito_model->solicitar_firmas($array_firmas)) {
                 show_error('No se pudo realizsar la solicitud de firmas', 500, 'Error al solicitar firmas');

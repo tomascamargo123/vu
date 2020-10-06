@@ -113,8 +113,8 @@ $db['infogov'] = array(
 	'stricton' => FALSE,
 	'failover' => array(),
 	'save_queries' => TRUE
-);
-*/
+);*/
+
 $active_group = 'default';
 $query_builder = TRUE;
 

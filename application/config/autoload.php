@@ -89,7 +89,7 @@ $autoload['drivers'] = array();
 |
 |	$autoload['helper'] = array('url', 'file');
 */
-$autoload['helper'] = array('datatables', 'permisos', 'url', 'zetta','pdftool_helper');
+$autoload['helper'] = array('datatables', 'permisos', 'url', 'zetta', 'pdftool_helper', 'ftp_helper');
 
 /*
 | -------------------------------------------------------------------

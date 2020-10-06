@@ -51,7 +51,7 @@ class Alertas_model extends CI_Model
 				->from("$this->sigmu_schema.pase")
 				->join("$this->sigmu_schema.oficina", 'oficina.id = pase.origen', 'left')
 				->join("$this->sigmu_schema.expediente", 'expediente.id = pase.id_expediente', 'left')
-                                ->join("$this->sigmu_schema.tramite", "tramite.id = expediente.tramite_id")
+                ->join("$this->sigmu_schema.tramite", "tramite.id = expediente.tramite_id")
 				->where('pase.origen', $this->session->userdata('oficina_actual_id'))
 				->where("(pase.respuesta = 'pendiente' OR pase.respuesta = 'rechazado' OR pase.respuesta = 'firma pendiente')")
 				->where("(pase.destino = -1 OR pase.destino = -2)")
