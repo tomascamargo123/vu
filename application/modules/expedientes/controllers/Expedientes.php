@@ -2667,9 +2667,6 @@ class Expedientes extends MY_Controller
 							'newformat' => array($size['w'], $size['h']),
 						));
 					} else {
-						if ( $size['h'] < 300 ){
-							$pdf->AddPage('P', array($size['w'], $size['h']));
-						}else{	
 
 						$pdf->AddPageByArray(array(
 							'orientation' => 'P',
@@ -2693,8 +2690,7 @@ class Expedientes extends MY_Controller
 							'efvalue' => 0,
 							'pagesel' => '',
 							'newformat' => array($size['w'], $size['h']),
-						));
-						}			
+						));		
 					}
 
 					$pdf->useTemplate($templateId);

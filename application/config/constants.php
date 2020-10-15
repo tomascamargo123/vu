@@ -90,6 +90,6 @@ defined('EXIT__AUTO_MAX')      OR define('EXIT__AUTO_MAX', 125); // highest auto
 |--------------------------------------------------------------------------
 */
 define('TITLE', 'SIGMu_ED');
-define('BASE_URL', 'http://localhost/vu-master/');
+define('BASE_URL', 'http://localhost/vu/');
 define('DIRECTORIO', '/');
 define('FOJA_AUTOMATICA', FALSE);
