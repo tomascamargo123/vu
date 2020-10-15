@@ -121,14 +121,39 @@ function ver_extras_expediente() {
 
 /*Seleccion multiple de firmantes*/
 var array_user =new Array();
-
-function checkedArray_firmas(id, val){
+function comprobarSeleccionados(){
+	console.log(array_user);
+	var filas = $('#usuarios_table').find('tbody').find('tr');
+	$.each(filas, function(key, value){
+		var iduser = $(value).find('td:eq(2)').find('input:eq(0)').prop('id');
+		var seleccionado = array_user.includes(iduser);
+		if(seleccionado){
+			$(value).css({
+				'background' : '#4A75B5',
+				'color' : '#FFFFFF'
+			});
+		}
+	});		
+}
+function checkedArray_firmas(id, val, fila){
 	if(val){
-		array_user.push(id);
+		if(!array_user.includes(id)){
+			array_user.push(id);
+			$(fila).css({
+				'background' : '#4A75B5',
+				'color' : '#FFFFFF'
+			});
+		} else {
+			var pos = array_user.indexOf(id);
+			array_user.splice( pos, 1 );
+			$(fila).prop('style', '');
+		}
 	}else if(!val){
 		var pos = array_user.indexOf(id);
-		array_user.splice( pos, 1 );		
+		array_user.splice( pos, 1 );
+		$(fila).prop('style', '');	
 	}
+	console.log(array_user);
 }
 function borrar_firmas(){
 	array_user = [];
@@ -144,9 +169,10 @@ function enviar_solicitud_firmas(id_archivo_adjunto){
 		dataType: "html"
 	});
 	
-		request.done(function() {
+	request.done(function() {
 		array_user = [];
 		$('#buscar_usuario_modal').modal('hide');
+		location.reload();
 	});
 }
 

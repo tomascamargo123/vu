@@ -146,9 +146,10 @@
 			} else {
 				$(input).prop('checked', true);
 			}
-			//checkedArray_firmas($(input).prop('id'), $(input).prop('checked'));
+			checkedArray_firmas($(input).prop('id'), $(input).prop('checked'), this);
 		});
 	});
+
 	var id = 0;
 	function adjuntoId(val){
 		id = val;
@@ -484,9 +485,9 @@
 							<a class="btn btn-danger btn-margin-bottom" href="#" data-toggle="modal" data-target="#eliminar_modal">Eliminar</a>
 						<?php endif; ?>
 						<?php if ($rechaza_expediente && $imprime_caratula && ($derivado || $derivador)): ?>
-							<button type="button" class="btn btn-danger btn-margin-bottom" data-toggle="modal" data-target="#rechazar_modal">Rechazar</button>
+							<!--<button type="button" class="btn btn-danger btn-margin-bottom" data-toggle="modal" data-target="#rechazar_modal">Rechazar</button>-->
 						<?php endif; ?>
-						<?php if($derivado): ?>
+						<?php if($derivado && $es_digital): ?>
 							<?php if($estado != "resolucion"): ?>
 								<button type="button" class="btn btn-danger btn-margin-bottom" data-toggle="modal" data-target="#resolucion_modal">A resolución</button>
 							<?php endif; ?>
@@ -636,12 +637,12 @@
 								<?php if (empty($adjuntos)): ?>
 									Este expediente aún no tiene archivos adjuntos.<br/>
 									Solo adjunte archivos en formato pdf.
-									<?php echo form_open_multipart("expedientes/archivos_adjuntos/nuevo/$expediente->id"); ?>
+									<?php echo form_open_multipart("expedientes/archivos_adjuntos/nuevo_ftp/$expediente->id"); ?>
 									<input id="archivos" name="archivos[]" multiple type="file" accept="text/*" class="file-loading">
 									<?php echo form_close(); ?>
 								<?php else: ?>
 									Solo adjunte archivos en formato pdf.
-									<?php echo form_open_multipart("expedientes/archivos_adjuntos/nuevo/$expediente->id"); ?>
+									<?php echo form_open_multipart("expedientes/archivos_adjuntos/nuevo_ftp/$expediente->id"); ?>
 									<input id="archivos" name="archivos[]" multiple type="file" accept="text/*" class="file-loading">
 									<?php echo form_close(); ?>
 									<table id="tbl_adjuntos" style="width:100%;" class="table table-hover table-bordered table-condensed">
@@ -656,6 +657,7 @@
 										</thead>
 										<tbody>
 											<?php foreach ($adjuntos as $adjunto): ?>
+											<?#php var_dump($adjunto);die(); ?>
 												<tr id="adjunto_<?= $adjunto['id'] ?>" name="pase_<?= $adjunto['pase_id'] ?>">
 													<td style="display:none;"><?php echo $adjunto['orden'] ?></td>
 													<td><a target="_blank" href="expedientes/archivos_adjuntos/vista_preliminar/<?php echo $adjunto['id']; ?>"><?php echo $adjunto['nombre']; ?></a></td>
@@ -664,7 +666,7 @@
 													<td>
 														<a style="width: 100px;" target="_blank" class="btn btn-xs btn-primary" href="expedientes/archivos_adjuntos/ver/<?php echo $adjunto['id']; ?>">Ver</a>
 														<?php if($adjunto['firma_pendiente'] == '0'): ?>
-															<?php if(explode('.', $adjunto['nombre'])[1] == 'pdf'): ?>
+															<?php if($adjunto['tipodecontenido'] == 'application/pdf'): ?>
 																<button style="width: 100px;" type="button" class="btn btn-xs btn-success" data-toggle="modal" data-target="#buscar_usuario_modal" onclick="archivo_adjunto_id =<?php echo $adjunto['id']; ?>;">Solicitar Firma</button>
 															<?php endif;?>
 															<?php if($pase_id == $adjunto['pase_id']): ?>
@@ -673,10 +675,13 @@
 																<button class="btn btn-default" onclick="bajar(this)" id="btn-bajar"><i class="fa fa-arrow-down" aria-hidden="true"></i></button>
 															<?php endif;?>
 														<?php else:?>
-															<?php if(explode('.', $adjunto['nombre'])[1] == 'pdf'): ?>
+															<?php if($adjunto['tipodecontenido'] == 'application/pdf'): ?>
 															<?php endif;?>
 														<?php endif;?>
-														<button class="btn btn-default" type="button" onclick="descargarArchivo_verExp('<?php echo $adjunto['id'];?>', '<?php echo $adjunto['nombre']; ?>');">Descargar</button>
+														<?php if($adjunto['tipodecontenido'] == 'text/plain'): ?>
+															<button class="btn btn-default" type="button" onclick="descargarArchivo_verExp('<?php echo $adjunto['id'];?>', '<?php echo $adjunto['nombre']; ?>');">Descargar</button>
+														<?php endif;?>
+														
 													</td>
 												</tr>
 											<?php endforeach; ?>

@@ -558,7 +558,14 @@ class Expedientes extends MY_Controller
                         if($acumulado != 'NULL'){
                             $ofic_dest = 2;
                             $resp_pase = 'acumulado';
-                        }else{
+						} else if($digital_row == 1){
+							$this->crear_directorio($expediente_id);
+							if (in_groups($this->grupos_derivadores, $this->grupos)){
+								$resp_pase = 'pendiente';
+							} else {
+								$resp_pase = 'aresolver';
+							}
+						} else{
                             if(!empty($this->input->post('oficina_id')))
                                 $ofic_dest = $this->input->post('oficina_id');
                         }
@@ -573,12 +580,14 @@ class Expedientes extends MY_Controller
 				'respuesta' => $resp_pase,
 				'fojas' => $this->input->post('fojas'),
 				'usuario_emisor' => $this->session->userdata('CodiUsua'),
-				'fecha_usuario' => date_format(new DateTime(), 'Y-m-d H:i:s')
+				'fecha_usuario' => date_format(new DateTime(), 'Y-m-d H:i:s'),
+				'usuario_derivado' => $this->session->userdata('CodiUsua')
 				), FALSE);
 			if ($this->db->trans_status() && $trans_ok)
 			{
 				$this->db->trans_commit();
 				$this->session->set_flashdata('message', $this->expedientes_model->get_msg());
+				
 				redirect("expedientes/expedientes/ver/$expediente_id", 'refresh');
 			}
 			else
@@ -1245,30 +1254,26 @@ class Expedientes extends MY_Controller
 			'sort_by' => 'inicio'
 		));
 		$this->load->model('expedientes/archivos_adjuntos_model');
-		$data['adjuntos'] = $this->archivos_adjuntos_model->get_adjuntos($expediente->id);
+		$data['adjuntos'] = $this->archivos_adjuntos_model->get_adjuntos_alt($expediente->id);
 		//var_dump($data['adjuntos']);die();
 		
 		//seleccion multiple
 		$select_render = 'function (data, type, full, meta) {
 			if(type === "display") {				
-					data = \'<input type="checkbox" id=\'+full.id+\' ></input\';
+					data = \'<input type="checkbox" id=\'+full.id+\' style="display:none"></input>\';
 			}
 			return data;
 		}';
 
 		$tableData_usuarios = array(
 			'columns' => array(
-				array('label' => 'Usuario', 'data' => 'CodiUsua', 'sort' => 'CodiUsua', 'width' => 10),
-				array('label' => 'Nombre', 'data' => 'DetaUsua', 'sort' => 'DetaUsua', 'width' => 95),
+				array('label' => 'Usuario', 'data' => 'CodiUsua', 'sort' => 'CodiUsua', 'width' => 10, 'query' => 'like'),
+				array('label' => 'Nombre', 'data' => 'DetaUsua', 'sort' => 'DetaUsua', 'width' => 95, 'query' => 'like'),
 				//array('label' => '', 'data' => 'select', 'width' => 5, 'class' => 'dt-body-center', 'responsive_class' => 'all', 'sortable' => 'false', 'searchable' => 'false'),
 				array('label' => '', 'data' => 'opciones', 'width' => 5, 'class' => 'dt-body-center', 'responsive_class' => 'all', 'sortable' => 'false', 'searchable' => 'false', 'render' => $select_render)
 			),
 			'table_id' => 'usuarios_table',
 			'source_url' => 'expedientes/usuarios/listar_users_signers_data',
-			'reuse_var' => TRUE,
-			'initComplete' => "function (){var r = $('#usuarios_table tfoot tr');r.find('th').each(function(){\$(this).css('padding', 8);});$('#usuarios_table thead').append(r);$('#search_0').css('text-align', 'center');}",
-			'footer' => TRUE,
-			'dom' => 'rtip'
 		);
 		$data['js'][] = 'js/expedientes/expedientes-varios.js';
 		$data['html_table_usuarios'] = buildHTML($tableData_usuarios);
@@ -2643,29 +2648,7 @@ class Expedientes extends MY_Controller
 					$size = $pdf->getTemplateSize($templateId);
 							
 					if ($size['w'] > $size['h']) {
-						$pdf->AddPageByArray(array(
-							'orientation' => 'L',
-							'condition' => '',
-							'resetpagenum' => '',
-							'pagenumstyle' => '',
-							'suppress' => '',
-							'mgl' => '',
-							'mgr' => '',
-							'mgt' => '',
-							'mgb' => '',
-							'mgh' => '',
-							'mgf' => '',
-							'ohname' => '',
-							'ehname' => '',
-							'ofname' => '',
-							'efname' => '',
-							'ohvalue' => 0,
-							'ehvalue' => 0,
-							'ofvalue' => 0,
-							'efvalue' => 0,
-							'pagesel' => '',
-							'newformat' => array($size['w'], $size['h']),
-						));
+						$pdf->AddPage('L', array($size['w'], $size['h']));
 					} else {
 
 						$pdf->AddPageByArray(array(
@@ -3116,6 +3099,54 @@ class Expedientes extends MY_Controller
 			$this->session->set_flashdata('message', 'Estado de expediente actualizado');
 
 		}
+	}
+
+	public function ftp_testing(){
+		$ftp_server = "192.168.1.35";
+		$ftp_user = "sigmu";
+		$ftp_pass = "computos2020";
+
+		// establecer una conexión
+		$conn_id = ftp_connect($ftp_server); 
+
+		//probar conexión
+		if (ftp_login($conn_id, $ftp_user, $ftp_pass)) {
+			//echo "Conectado como $ftp_user@$ftp_server\n";
+		} else {
+			//echo "No se pudo conectar como $ftp_user\n";
+		}
+
+		$contents = ftp_nlist($conn_id, ".");
+
+		// output $contents manual de usuario para registro en bonos web
+		echo $contents[0];
+
+		$local_file = "archivo_local.pdf";
+		$server_file = $contents[0]; 
+		
+		// abrir un archivo para escribir
+		$handle = fopen($local_file, 'w');
+
+		// intenta descargar un $remote_file y guardarlo en $handle
+		if (ftp_fget($conn_id, $handle, $server_file, FTP_ASCII, 0)) {
+		echo "Se ha escrito satisfactoriamente sobre $local_file\n";
+		} else {
+		echo "Ha habido un problema durante la descarga de $remote_file en $local_file\n";
+		}
+
+		// cerrar la conexión ftp y el gestor de archivo
+		ftp_close($conn_id);
+		fclose($handle);
+
+		header("Content-type: application/pdf");
+		header("Content-Disposition: inline; filename=archivo_local.pdf");
+		readfile("archivo_local.pdf");
+	}
+
+	public function crear_directorio($expediente_id){
+		$conn_id = connect_ftpserver();
+		ftp_mkdir($conn_id, $expediente_id);
+		ftp_close($conn_id);
 	}
 }
 /* End of file Expedientes.php */

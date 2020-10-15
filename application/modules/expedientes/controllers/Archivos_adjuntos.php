@@ -61,7 +61,7 @@ class Archivos_adjuntos extends MY_Controller
 		$oficina = $this->expedientes_model->get_oficina($expediente_id);
 		if ($oficina !== $this->session->userdata('oficina_actual_id') && !in_groups($this->grupos_admin, $this->grupos))
 		{
-			$this->session->set_flashdata('error', 'No puede agregar adjuntos de expedientes que no estén en su oficina');
+			$this->session->set_flashdata('error', 'No puede adjuntar archivos a expedientes que no estén en su oficina');
 			redirect("expedientes/expedientes/ver/$expediente_id");
 		}
 		$archivos = $_FILES['archivos'];
@@ -73,11 +73,21 @@ class Archivos_adjuntos extends MY_Controller
 		{
 			$cant_archivos = count($archivos['name']);
 		}
+		$types = $archivos['type'];
 		$nombres = $archivos['name'];
 		$todos_pdf = TRUE;
-		foreach($nombres as $nombre){ 			
-			if(explode('.', $nombre)[1] != 'pdf'){ 	
-				if(explode('.', $nombre)[1] != 'txt'){
+		/*foreach($types as $type){ 			
+			if($type != 'application/pdf'){ 	
+				if($type != 'text/plain'){
+					$todos_pdf = FALSE; 
+				}					
+			} 		
+		}*/
+		foreach($nombres as $nombre){ 	
+			$ext = new SplFileInfo($nombre);
+			//var_dump($ext->getExtension()); 	
+			if($ext->getExtension() != 'pdf'){ 	
+				if($ext->getExtension() != 'txt'){
 					$todos_pdf = FALSE; 
 				}					
 			} 		
@@ -713,40 +723,37 @@ class Archivos_adjuntos extends MY_Controller
 		{
 			show_404();
 		}
-		header('Content-Disposition: inline; filename="' . $archivo_adjunto->nombre . '"');
-		header('Content-Type: ' . (empty($archivo_adjunto->tipodecontenido) ?
-				$this->mimetype($archivo_adjunto->contenido) :
-				$archivo_adjunto->tipodecontenido));
-//			header('Cache-Control: public, must-revalidate, max-age=0'); // HTTP/1.1
-//			header('Pragma: public');
-//			header('Expires: ' . date_format(new DateTime('-1 day'), 'D, d M Y H:i:s') . ' GMT');
-//			header('Last-Modified: ' . date_format(new DateTime($archivo_adjunto->fecha), 'D, d M Y H:i:s') . ' GMT');
-//			header('Content-Length: ' . strlen($archivo_adjunto->contenido));
-//			header('Content-Disposition: inline; filename="' . basename($archivo_adjunto->nombre) . '";');
-//			ob_clean();
-//			flush();
-		echo $archivo_adjunto->contenido;
-		/*
-		$this->load->library('pdf');
-		$pdf = $this->pdf->load();
-		require_once _MPDF_PATH . 'vendor/setasign/fpdi/fpdi_pdf_parser.php';
-		$pdf->SetImportUse();
-
-		$ContenidoSalida = $archivo_adjunto->contenido;
-		$directorioFichero = sys_get_temp_dir();
-		$tempFile = tempnam($directorioFichero, "INF").".pdf";
-		$gestor = fopen($tempFile, "w");
 		
-		fwrite($gestor, $ContenidoSalida);
-		fclose($gestor);
+		$conn_id = connect_ftpserver(); 
+		$dir = strval($archivo_adjunto->id_expediente);
 
-		$pagecount = $pdf->SetSourceFile($tempFile);
+		$contents = ftp_nlist($conn_id, $archivo_adjunto->id_expediente);
 
-		$tplId = $pdf->ImportPage($pagecount);
-		$pdf->UseTemplate($tplId);
+		// output $contents manual de usuario para registro en bonos web
 
-		$pdf->setTitle($archivo_adjunto->nombre);
-		$pdf->Output();*/
+		$local_file = 'archivo_local.pdf';
+		$server_file = $contents[0];
+		
+		// abrir un archivo para escribir
+		$handle = fopen($local_file, 'r');
+
+		// intenta descargar un $remote_file y guardarlo en $handle
+		if (ftp_fget($conn_id, $handle, $server_file, FTP_ASCII, 0)) {
+			echo "Se ha escrito satisfactoriamente sobre $local_file\n";
+		} else {
+			echo "Ha habido un problema durante la descarga de $remote_file en $local_file\n";
+		}
+		//die();
+
+		// cerrar la conexión ftp y el gestor de archivo
+		
+		
+
+		header("Content-type: application/pdf");
+		header('Content-Disposition: inline; filename="' . $local_file . '"');
+		fpassthru($handle);
+		ftp_close($conn_id);
+		fclose($handle);
 	}
 
 	private function vista_img($id = NULL) //testing
@@ -888,6 +895,163 @@ class Archivos_adjuntos extends MY_Controller
 		if($id != NULL){
 			
 		}
+	}
+
+	public function nuevo_ftp($expediente_id)
+	{
+		if (!in_groups($this->grupos_permitidos, $this->grupos) || $expediente_id == NULL || !ctype_digit($expediente_id))
+		{
+			show_error('No tiene permisos para la acción solicitada', 500, 'Acción no autorizada');
+		}
+		$expediente = $this->expedientes_model->get(array('id' => $expediente_id));
+		if (empty($expediente))
+		{
+			show_404();
+		}
+		$oficina = $this->expedientes_model->get_oficina($expediente_id);
+		if ($oficina !== $this->session->userdata('oficina_actual_id') && !in_groups($this->grupos_admin, $this->grupos))
+		{
+			$this->session->set_flashdata('error', 'No puede adjuntar archivos a expedientes que no estén en su oficina');
+			redirect("expedientes/expedientes/ver/$expediente_id");
+		}
+		$archivos = $_FILES['archivos'];
+		if (empty($archivos['name'][0]))
+		{
+			$cant_archivos = 0;
+		}
+		else
+		{
+			$cant_archivos = count($archivos['name']);
+		}
+		$nombres = $archivos['name'];
+		$todos_pdf = TRUE;
+		foreach($nombres as $nombre){ 	
+			$ext = new SplFileInfo($nombre);	
+			if($ext->getExtension() != 'pdf'){ 	
+				if($ext->getExtension() != 'txt'){
+					$todos_pdf = FALSE; 
+				}					
+			} 		
+		}
+		if($todos_pdf){ 
+			if ($cant_archivos != 0)
+			{
+
+				$conn_id = connect_ftpserver();
+
+				$dir = strval($expediente_id);
+				ftp_chdir($conn_id, $dir);
+
+				$this->load->library('upload');
+				$this->load->model('expedientes/archivos_adjuntos_model');
+                $orden = $this->archivos_adjuntos_model->get_orden($expediente_id);
+				$pase_id = $this->archivos_adjuntos_model->get_paseId($expediente_id);
+				$this->db->trans_begin();
+				$trans_ok = TRUE;
+				$this->load->library('pdf');
+				$pdf = $this->pdf->load();
+				require_once _MPDF_PATH . 'vendor/setasign/fpdi/fpdi_pdf_parser.php';
+				$pdf->SetImportUse();
+				for($i = 0; $i < $cant_archivos; $i++){
+					$local = $archivos["tmp_name"][$i];
+					$remoto = $archivos["name"][$i];
+					$file_url = $dir.'/'.$remoto;
+					if (ftp_put($conn_id, $remoto, $local, FTP_ASCII)) {
+						if($orden > 0){
+						$trans_ok&= $this->archivos_adjuntos_model->create(array(
+								'nombre' => $archivos['name'][$i],
+								'pase_id' => $pase_id[0]['id'],
+								'tamanio' => $archivos['size'][$i],
+								'tipodecontenido' => $archivos['type'][$i],
+								'ubicacion' => $file_url,
+								'id_expediente' => $expediente_id,
+								'descripcion' => 'NULL',
+								'fecha' => date_format(new DateTime(), 'Y-m-d H:i:s'),
+								'orden' => $orden,
+								), FALSE);
+						} else {
+						$trans_ok&= $this->archivos_adjuntos_model->create(array(
+							'nombre' => $archivos['name'][$i],
+							'pase_id' => $pase_id[0]['id'],
+							'tamanio' => $archivos['size'][$i],
+							'tipodecontenido' => $archivos['type'][$i],
+							'ubicacion' => $file_url,
+							'id_expediente' => $expediente_id,
+							'descripcion' => 'NULL',
+							'fecha' => date_format(new DateTime(), 'Y-m-d H:i:s')
+							), FALSE);
+						}
+						if ($archivos['type'][$i] === 'application/pdf')
+						{
+							$pagecount = $pdf->SetSourceFile($local);
+							$archivo_adjunto_id = $this->archivos_adjuntos_model->get_row_id();
+							$query_fojas = $this->archivos_adjuntos_model->get(array('select' => 'COALESCE(MAX(foja_hasta),0)+1 as foja_desde',
+								'join' => array(array('table' => 'fojas_archivos_adjuntos_alt', 'where' => 'fojas_archivos_adjuntos_alt.archivo_adjunto_id=archivoadjunto_alt.id')),
+								'id_expediente' => $expediente_id));
+							$foja_desde = $query_fojas[0]->foja_desde;
+							$this->load->model('expedientes/fojas_archivos_adjuntos_model');
+							$trans_ok&= $this->fojas_archivos_adjuntos_model->create(array(
+								'archivo_adjunto_id' => $archivo_adjunto_id,
+								'foja_desde' => $foja_desde,
+								'foja_hasta' => $foja_desde + $pagecount - 1
+								), FALSE);
+							if (FOJA_AUTOMATICA || $this->expedientes_model->is_digital($expediente_id))
+							{
+								$idLastPase = $this->pases_model->getIdUltimoPase($expediente_id);
+								$this->load->model('expedientes/expedientes_model');
+								$trans_ok&= $this->expedientes_model->update(array(
+									'id' => $expediente_id,
+									'fojas' => $foja_desde + $pagecount - 1
+									), FALSE);
+								$trans_ok &= $this->pases_model->update([
+									'id' => $idLastPase,
+									'fojas' => $foja_desde + $pagecount - 1
+								],TRUE);
+							}
+						}
+						$orden = $orden + 1;
+					} else {
+						$error_msg = "Hubo un problema durante la transferencia de $remoto\n ";
+						$this->session->set_flashdata('error', $error_msg);
+						redirect("expedientes/expedientes/ver/$expediente_id", 'refresh');
+						$this->db->trans_rollback();
+					}
+				}
+				ftp_close($conn_id);
+				if ($this->db->trans_status() && $trans_ok)
+				{
+					$this->db->trans_commit();
+					$this->session->set_flashdata('message', 'Archivos adjuntados');
+					redirect("expedientes/expedientes/ver/$expediente_id", 'refresh');
+				}
+				else
+				{
+					$this->db->trans_rollback();
+					$error_msg = 'Se ha producido un error con la base de datos.';
+					if ($this->archivos_adjuntos_model->get_error())
+					{
+						$error_msg .='<br>' . $this->archivos_adjuntos_model->get_error();
+					}
+					if ($this->fojas_archivos_adjuntos_model->get_error())
+					{
+						$error_msg .='<br>' . $this->fojas_archivos_adjuntos_model->get_error();
+					}
+					$this->session->set_flashdata('error', $error_msg);
+					redirect("expedientes/expedientes/ver/$expediente_id", 'refresh');
+				}
+				
+				
+			}
+			else
+			{
+				$this->session->set_flashdata('error', 'No se seleccionó ningún archivo para adjuntar');
+				redirect("expedientes/expedientes/ver/$expediente_id", 'refresh');
+			}
+		} else { 			
+			$this->session->set_flashdata('error', 'Sólo puede adjuntar archivos en formato pdf'); 			
+			redirect("expedientes/expedientes/ver/$expediente_id", 'refresh'); 		
+		}
+		
 	}
 }
 /* End of file Archivos_adjuntos.php */

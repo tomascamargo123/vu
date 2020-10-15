@@ -8,7 +8,7 @@ class Fojas_archivos_adjuntos_model extends MY_Model
 	public function __construct()
 	{
 		parent::__construct();
-		$this->table_name = "fojas_archivos_adjuntos";
+		$this->table_name = "fojas_archivos_adjuntos_alt";
 		$this->msg_name = 'Foja de archivo adjunto';
 		$this->id_name = 'id';
 		$this->columnas = array('id', 'archivo_adjunto_id', 'foja_desde', 'foja_hasta');
