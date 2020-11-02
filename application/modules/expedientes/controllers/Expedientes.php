@@ -1254,7 +1254,7 @@ class Expedientes extends MY_Controller
 			'sort_by' => 'inicio'
 		));
 		$this->load->model('expedientes/archivos_adjuntos_model');
-		$data['adjuntos'] = $this->archivos_adjuntos_model->get_adjuntos_alt($expediente->id);
+		$data['adjuntos'] = $this->archivos_adjuntos_model->get_adjuntos($expediente->id);
 		//var_dump($data['adjuntos']);die();
 		
 		//seleccion multiple
@@ -2648,7 +2648,29 @@ class Expedientes extends MY_Controller
 					$size = $pdf->getTemplateSize($templateId);
 							
 					if ($size['w'] > $size['h']) {
-						$pdf->AddPage('L', array($size['w'], $size['h']));
+						$pdf->AddPageByArray(array(
+							'orientation' => 'L',
+							'condition' => '',
+							'resetpagenum' => '',
+							'pagenumstyle' => '',
+							'suppress' => '',
+							'mgl' => '',
+							'mgr' => '',
+							'mgt' => '',
+							'mgb' => '',
+							'mgh' => '',
+							'mgf' => '',
+							'ohname' => '',
+							'ehname' => '',
+							'ofname' => '',
+							'efname' => '',
+							'ohvalue' => 0,
+							'ehvalue' => 0,
+							'ofvalue' => 0,
+							'efvalue' => 0,
+							'pagesel' => '',
+							'newformat' => array($size['h'], $size['w']),
+						));		
 					} else {
 
 						$pdf->AddPageByArray(array(
@@ -2807,15 +2829,39 @@ class Expedientes extends MY_Controller
 					$templateId = $pdf->importPage($i);
 			
 					$size = $pdf->getTemplateSize($templateId);
-					var_dump($size); die();
+
+					if($i == 3){
+						var_dump($size); die();
+					}
+					
 					if ($size['w'] > $size['h']) {
-						$pdf->AddPage('L', array($size['w'], $size['h']));
-					} else {
-						if ( $size['h'] < 300 ){
-							$pdf->AddPage('P', array($size['w'], $size['h']));
-						}else{						
 						$pdf->AddPageByArray(array(
-							'orientation' => '',
+							'orientation' => 'L',
+							'condition' => '',
+							'resetpagenum' => '',
+							'pagenumstyle' => '',
+							'suppress' => '',
+							'mgl' => '',
+							'mgr' => '',
+							'mgt' => '',
+							'mgb' => '',
+							'mgh' => '',
+							'mgf' => '',
+							'ohname' => '',
+							'ehname' => '',
+							'ofname' => '',
+							'efname' => '',
+							'ohvalue' => 0,
+							'ehvalue' => 0,
+							'ofvalue' => 0,
+							'efvalue' => 0,
+							'pagesel' => '',
+							'newformat' => array($size['h'], $size['w']),
+						));		
+					} else {
+
+						$pdf->AddPageByArray(array(
+							'orientation' => 'P',
 							'condition' => '',
 							'resetpagenum' => '',
 							'pagenumstyle' => '',
@@ -2836,8 +2882,7 @@ class Expedientes extends MY_Controller
 							'efvalue' => 0,
 							'pagesel' => '',
 							'newformat' => array($size['w'], $size['h']),
-						));
-						}			
+						));		
 					}
 
 					$pdf->useTemplate($templateId);
@@ -3102,7 +3147,7 @@ class Expedientes extends MY_Controller
 	}
 
 	public function ftp_testing(){
-		$ftp_server = "192.168.1.35";
+		$ftp_server = "192.168.1.205";
 		$ftp_user = "sigmu";
 		$ftp_pass = "computos2020";
 
