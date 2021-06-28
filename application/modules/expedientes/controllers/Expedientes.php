@@ -1254,7 +1254,7 @@ class Expedientes extends MY_Controller
 			'sort_by' => 'inicio'
 		));
 		$this->load->model('expedientes/archivos_adjuntos_model');
-		$data['adjuntos'] = $this->archivos_adjuntos_model->get_adjuntos($expediente->id);
+		$data['adjuntos'] = $this->archivos_adjuntos_model->get_adjuntos_alt($expediente->id);
 		//var_dump($data['adjuntos']);die();
 		
 		//seleccion multiple
@@ -2526,6 +2526,7 @@ class Expedientes extends MY_Controller
 	}
 
 	public function pdf_exportar($id = NULL, $dest_type = 'I')
+
 	{
 		if (!in_groups($this->grupos_permitidos, $this->grupos) || $id == NULL || !ctype_digit($id) || !in_array($dest_type, array('I', 'D')))
 		{
@@ -2577,7 +2578,7 @@ class Expedientes extends MY_Controller
 		$this->load->model('expedientes/archivos_adjuntos_model');
 		$sitioDeExpediente = $this->expedientes_model->sitioDeExpediente($id);
 		$orden = $this->archivos_adjuntos_model->usa_orden($id);
-
+		
 		if(in_groups($this->grupos_admin, $this->grupos) || $sitioDeExpediente[0]['origen'] == $this->session->userdata('oficina_actual_id')){
 			if($orden){
 				$adjuntos_pdf = $this->archivos_adjuntos_model->get(array(
@@ -2611,13 +2612,15 @@ class Expedientes extends MY_Controller
 			}
 		}
 		$this->load->library('pdf');
-                $pdf = $this->pdf->load();
+        $pdf = $this->pdf->load();
 		require_once _MPDF_PATH . 'vendor/setasign/fpdi/fpdi_pdf_parser.php';
 		$pdf->SetImportUse();
 		$html = $this->load->view('expedientes/expedientes/expedientes_pdf_caratula', array('expediente' => $expediente), true);
 		$pdf->WriteHTML($html); // write the HTML into the PDF
 		$pagina = 1;
 		$paginas = array("$pagina" => 'Caratula');
+		$conn_id = connect_ftpserver();
+		
 		if (!empty($adjuntos_pdf))
 		{
 			$this->load->model('expedientes/firmas_archivos_adjuntos_model');
@@ -2722,7 +2725,9 @@ class Expedientes extends MY_Controller
 					}
 				}
 			}
+			fclose($temp);
 		}
+		ftp_close($conn_id);
 		$this->session->set_userdata("pdf_$id", $paginas);
 		$pdf->Output("Expediente_{$expediente->numero}-{$expediente->ano}-{$expediente->anexo}.pdf", $dest_type);
 	}
@@ -2988,7 +2993,6 @@ class Expedientes extends MY_Controller
 		$firma_digital = $this->expedientes_model->firma_digital($this->session->userdata('user_id'), $id);
 		$this->load->model('expedientes/firmas_archivos_adjuntos_model');
 		$firma_pendiente =  $this->firmas_archivos_adjuntos_model->tieneFirmaPendiente($id, $this->session->userdata('user_id'));
-		
 		if(!in_groups($this->grupos_admin, $this->grupos)){
 			if(!$firma_digital){
 				if ($oficina !== $this->session->userdata('oficina_actual_id')){
@@ -3147,7 +3151,7 @@ class Expedientes extends MY_Controller
 	}
 
 	public function ftp_testing(){
-		$ftp_server = "192.168.1.205";
+		$ftp_server = "192.168.1.200";
 		$ftp_user = "sigmu";
 		$ftp_pass = "computos2020";
 
@@ -3172,6 +3176,8 @@ class Expedientes extends MY_Controller
 		// abrir un archivo para escribir
 		$handle = fopen($local_file, 'w');
 
+		var_dump($handle); die();
+
 		// intenta descargar un $remote_file y guardarlo en $handle
 		if (ftp_fget($conn_id, $handle, $server_file, FTP_ASCII, 0)) {
 		echo "Se ha escrito satisfactoriamente sobre $local_file\n";
@@ -3190,7 +3196,7 @@ class Expedientes extends MY_Controller
 
 	public function crear_directorio($expediente_id){
 		$conn_id = connect_ftpserver();
-		ftp_mkdir($conn_id, $expediente_id);
+		$creado = ftp_mkdir($conn_id, $expediente_id);
 		ftp_close($conn_id);
 	}
 }

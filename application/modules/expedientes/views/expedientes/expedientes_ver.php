@@ -637,12 +637,12 @@
 								<?php if (empty($adjuntos)): ?>
 									Este expediente aún no tiene archivos adjuntos.<br/>
 									Solo adjunte archivos en formato pdf.
-									<?php echo form_open_multipart("expedientes/archivos_adjuntos/nuevo_ftp/$expediente->id"); ?>
+									<?php echo form_open_multipart("expedientes/archivos_adjuntos/nuevo/$expediente->id"); ?>
 									<input id="archivos" name="archivos[]" multiple type="file" accept="text/*" class="file-loading">
 									<?php echo form_close(); ?>
 								<?php else: ?>
 									Solo adjunte archivos en formato pdf.
-									<?php echo form_open_multipart("expedientes/archivos_adjuntos/nuevo_ftp/$expediente->id"); ?>
+									<?php echo form_open_multipart("expedientes/archivos_adjuntos/nuevo/$expediente->id"); ?>
 									<input id="archivos" name="archivos[]" multiple type="file" accept="text/*" class="file-loading">
 									<?php echo form_close(); ?>
 									<table id="tbl_adjuntos" style="width:100%;" class="table table-hover table-bordered table-condensed">

@@ -65,7 +65,7 @@ class Firmas_archivos_adjuntos_model extends MY_Model
             WHERE faa.usuario_id = 38 AND aa.id_expediente = 253587 AND faa.estado = "Solicitada";
              */
             $this->db->select('faa.id');
-            $this->db->join('sigmu.archivoadjunto aa', 'aa.id = faa.archivo_adjunto_id');
+            $this->db->join('archivo.archivoadjunto aa', 'aa.id = faa.archivo_adjunto_id');
             $this->db->where('faa.usuario_id'.($user_id == null  ? '> 0' : '='.$user_id));
             $this->db->where('aa.id_expediente', $id_expediente);
             $this->db->where('faa.estado', 'Solicitada');
@@ -89,7 +89,7 @@ class Firmas_archivos_adjuntos_model extends MY_Model
 			(select 
 			  id 
 			from
-			  `sigmu`.`archivoadjunto` 
+			  `archivo`.`archivoadjunto` 
 			where `id_expediente` = $id_expediente) 
 			and `estado` = 'Solicitada' 
 			and `solicitante_id` = $usuario_id ;";

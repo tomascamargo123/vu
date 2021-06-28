@@ -12,6 +12,7 @@ class Archivos_adjuntos extends MY_Controller
 			redirect('expedientes/escritorio');
 		}
 		$this->sigmu_schema = $this->config->item('sigmu_schema');
+		$this->archivo_schema = $this->config->item('archivo_schema');
 		$this->load->model('expedientes/archivos_adjuntos_model');
 		$this->load->model('expedientes/expedientes_model');
 		$this->load->model('expedientes/pases_model');
@@ -39,7 +40,7 @@ class Archivos_adjuntos extends MY_Controller
 		$this->datatables
 			->select('archivoadjunto.id, archivoadjunto.nombre, archivoadjunto.tamanio, archivoadjunto.tipodecontenido, archivoadjunto.id_expediente, archivoadjunto.descripcion, archivoadjunto.fecha, expediente.caratula as id_expediente')
 			->unset_column('id')
-			->from("$this->sigmu_schema.archivoadjunto")
+			->from("$this->archivo_schema.archivoadjunto")
 			->join("$this->sigmu_schema.expediente", 'expediente.id = archivoadjunto.id_expediente', 'left')
 			->where('expediente.id', $expediente->id)
 			->add_column('edit', '<a href="expedientes/archivos_adjuntos/ver/$1" title="Administrar"><i class="fa fa-cogs"></i></a>', 'id');
@@ -231,6 +232,7 @@ class Archivos_adjuntos extends MY_Controller
 			$this->session->set_flashdata('error', 'No puede ver adjuntos de expedientes que no estén en su oficina');
 			redirect("expedientes/expedientes/ver/$expediente->id");
 		}*/
+		
 		$data['message'] = $this->session->flashdata('message');
 		$data['error'] = $this->session->flashdata('error');
 
@@ -726,7 +728,6 @@ class Archivos_adjuntos extends MY_Controller
 		
 		$conn_id = connect_ftpserver(); 
 		$dir = strval($archivo_adjunto->id_expediente);
-
 		$contents = ftp_nlist($conn_id, $archivo_adjunto->id_expediente);
 
 		// output $contents manual de usuario para registro en bonos web
@@ -747,7 +748,7 @@ class Archivos_adjuntos extends MY_Controller
 
 		// cerrar la conexión ftp y el gestor de archivo
 		
-		
+
 
 		header("Content-type: application/pdf");
 		header('Content-Disposition: inline; filename="' . $local_file . '"');
@@ -938,10 +939,9 @@ class Archivos_adjuntos extends MY_Controller
 			{
 
 				$conn_id = connect_ftpserver();
-
+				ftp_pasv($conn_id, true);
 				$dir = strval($expediente_id);
-				ftp_chdir($conn_id, $dir);
-
+				$sss= ftp_chdir($conn_id, $dir);
 				$this->load->library('upload');
 				$this->load->model('expedientes/archivos_adjuntos_model');
                 $orden = $this->archivos_adjuntos_model->get_orden($expediente_id);
@@ -954,8 +954,11 @@ class Archivos_adjuntos extends MY_Controller
 				$pdf->SetImportUse();
 				for($i = 0; $i < $cant_archivos; $i++){
 					$local = $archivos["tmp_name"][$i];
+					//$local = 'C:\Users\Ariel\Downloads\Ticket';
+					$archivoname = $archivos[$i];
 					$remoto = $archivos["name"][$i];
 					$file_url = $dir.'/'.$remoto;
+					//var_dump($file_url,$local, $remoto, $conn_id); die();
 					if (ftp_put($conn_id, $remoto, $local, FTP_ASCII)) {
 						if($orden > 0){
 						$trans_ok&= $this->archivos_adjuntos_model->create(array(

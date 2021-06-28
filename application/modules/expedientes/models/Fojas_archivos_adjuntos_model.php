@@ -30,8 +30,9 @@ class Fojas_archivos_adjuntos_model extends MY_Model
 	public function get_archivo($expediente_id, $foja)
 	{
 		$sigmu_schema = $this->config->item('sigmu_schema');
+		$archivo_schema = $this->config->item('archivo_schema');
 		return $this->db->select('aa.*')
-				->from("$sigmu_schema.archivoadjunto aa")
+				->from("$archivo_schema.archivoadjunto aa")
 				->join('fojas_archivos_adjuntos faa', 'aa.id=faa.archivo_adjunto_id')
 				->where('aa.id_expediente', $expediente_id)
 				->where('faa.foja_desde <=', $foja)

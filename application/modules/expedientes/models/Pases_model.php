@@ -166,12 +166,12 @@ class Pases_model extends MY_Model
             $id2 = $resp[1]->id;
             $query1 = "DELETE FROM sigmu.pase WHERE id = $id1";
             $query2 = "UPDATE sigmu.pase SET destino = -1, respuesta = 'pendiente' WHERE id = $id2";
-            $query3 = "SELECT id FROM sigmu.archivoadjunto WHERE pase_id = $id2 ORDER BY id DESC LIMIT 2;";
+            $query3 = "SELECT id FROM archivo.archivoadjunto WHERE pase_id = $id2 ORDER BY id DESC LIMIT 2;";
             $this->db->query($query1);
             $this->db->query($query2);
             $adjunto_pase_id1 = $this->db->query($query3)->result_array()[0]['id'];
             $adjunto_pase_id2 = $this->db->query($query3)->result_array()[1]['id'];
-            $query4 = "DELETE FROM sigmu.archivoadjunto WHERE id = $adjunto_pase_id1";
+            $query4 = "DELETE FROM archivo.archivoadjunto WHERE id = $adjunto_pase_id1";
             $this->db->query($query4);
             $query5 = "DELETE FROM expedientes.fojas_archivos_adjuntos WHERE archivo_adjunto_id = $adjunto_pase_id1";
             $this->db->query($query5);
@@ -189,7 +189,7 @@ class Pases_model extends MY_Model
 
     public function verificar_firma($pase_id){
         $query = "SELECT * FROM expedientes.firmas_archivos_adjuntos 
-        WHERE archivo_adjunto_id = (SELECT id FROM sigmu.archivoadjunto WHERE pase_id = $pase_id ORDER BY id DESC LIMIT 1)";
+        WHERE archivo_adjunto_id = (SELECT id FROM archivo.archivoadjunto WHERE pase_id = $pase_id ORDER BY id DESC LIMIT 1)";
         return $this->db->query($query)->result_array();
     }
 

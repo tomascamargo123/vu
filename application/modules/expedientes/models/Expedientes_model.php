@@ -7,6 +7,7 @@ class Expedientes_model extends MY_Model {
     public function __construct() {
         parent::__construct();
         $this->sigmu_schema = $this->config->item('sigmu_schema');
+        $this->archivo_schema = $this->config->item('archivo_schema');
         $this->table_name = "$this->sigmu_schema.expediente";
         $this->aud_table_name = "{$this->sigmu_schema}_aud.expediente";
         $this->msg_name = 'Expediente';
@@ -65,7 +66,7 @@ class Expedientes_model extends MY_Model {
      * @return bool
      */
     protected function _can_delete($delete_id) {
-        if ($this->db->where('id_expediente', $delete_id)->count_all_results("$this->sigmu_schema.archivoadjunto") > 0) {
+        if ($this->db->where('id_expediente', $delete_id)->count_all_results("$this->archivo_schema.archivoadjunto") > 0) {
             $this->_set_error('No se ha podido eliminar el registro de ' . $this->msg_name . '. Verifique que no esté asociado a un archivo adjunto.');
             return FALSE;
         }
@@ -157,9 +158,9 @@ class Expedientes_model extends MY_Model {
         $this->db->trans_begin();
 
         $this->db->query('DELETE FROM sigmu.pase WHERE pase.id_expediente = ?',array($id));
-        $query = $this->db->query('SELECT COUNT(*) AS cantidad FROM sigmu.archivoadjunto WHERE id_expediente = '.$id);
+        $query = $this->db->query('SELECT COUNT(*) AS cantidad FROM archivo.archivoadjunto WHERE id_expediente = '.$id);
         if($query->result_array()[0]['cantidad'] > 0 ){
-            $this->db->query('DELETE FROM sigmu.archivoadjunto WHERE id_expediente = ?',array($id));
+            $this->db->query('DELETE FROM archivo.archivoadjunto WHERE id_expediente = ?',array($id));
         }
         $this->db->query('DELETE FROM sigmu.expediente WHERE expediente.id = ?',array($id));
 
@@ -214,7 +215,7 @@ class Expedientes_model extends MY_Model {
         from expedientes.firmas_archivos_adjuntos
         where firmas_archivos_adjuntos.usuario_id = $user_id and firmas_archivos_adjuntos.archivo_adjunto_id in(select
         id
-        from sigmu.archivoadjunto
+        from archivo.archivoadjunto
         where id_expediente = $id) and (estado = 'Realizada' OR estado = 'Solicitada')
         ORDER BY id DESC 
         LIMIT 1");

@@ -8,11 +8,12 @@ class Archivos_adjuntos_model extends MY_Model
 	public function __construct()
 	{
 		parent::__construct();
-		$this->sigmu_schema = $this->config->item('sigmu_schema');
-		$this->table_name = "$this->sigmu_schema.archivoadjunto_alt";
+		$this->archivo_schema = $this->config->item('archivo_schema');
+        $this->load->database('archivo', TRUE);
+		$this->table_name = "$this->archivo_schema.archivoadjunto";
 		$this->msg_name = 'Archivo adjunto';
 		$this->id_name = 'id';
-		$this->columnas = array('id', 'nombre', 'tamanio', 'tipodecontenido', 'ubicacion', 'id_expediente', 'descripcion', 'fecha', 'pase_id', 'orden');
+		$this->columnas = array('id', 'nombre', 'tamanio', 'tipodecontenido', 'contenido', 'id_expediente', 'descripcion', 'fecha', 'pase_id', 'orden');
 		$this->fields = array(
 			array('name' => 'nombre', 'label' => 'Nombre', 'maxlength' => '255'),
 			array('name' => 'tamanio', 'label' => 'Tamaño', 'type' => 'integer', 'maxlength' => '20'),
@@ -39,7 +40,7 @@ class Archivos_adjuntos_model extends MY_Model
             $this->db->select('contenido');
             $this->db->where('id', $id);
             $this->db->where('tipodecontenido', 'application/pdf');
-            $this->db->from('sigmu.archivoadjunto');
+            $this->db->from('archivo.archivoadjunto');
             $query = $this->db->get();
 
             return $query->result_array();
@@ -54,7 +55,7 @@ class Archivos_adjuntos_model extends MY_Model
                     base64_decode($array_xml['file']),
                     FALSE);
             $this->db->where('id', $array_xml['id']);
-            $this->db->update('sigmu.archivoadjunto');
+            $this->db->update('archivo.archivoadjunto');
             return true;
         }
         return false;
@@ -76,7 +77,7 @@ class Archivos_adjuntos_model extends MY_Model
         $this->db->set('audi_fecha', date('Y-m-d H:i:s'));
         $this->db->set('audi_accion', 'I');
         $this->db->set('pase_id', $data['pase_id']);
-        return $this->db->insert('sigmu.archivoadjunto');
+        return $this->db->insert('archivo.archivoadjunto');
     }
     
     public function max_id(){
@@ -108,16 +109,16 @@ class Archivos_adjuntos_model extends MY_Model
             WHEN estado = 'Solicitada' THEN 1
             ELSE 0
             END AS firma_pendiente
-          FROM `sigmu`.`archivoadjunto`
+          FROM `archivo`.`archivoadjunto`
             LEFT JOIN `expedientes`.`firmas_archivos_adjuntos`
               ON `archivoadjunto`.`id` = `firmas_archivos_adjuntos`.`archivo_adjunto_id`
           WHERE firmas_archivos_adjuntos.id IN (SELECT
             MAX(firmas_archivos_adjuntos.id)
           FROM expedientes.firmas_archivos_adjuntos 
-          RIGHT JOIN sigmu.archivoadjunto 
+          RIGHT JOIN archivo.archivoadjunto 
           ON firmas_archivos_adjuntos.archivo_adjunto_id = archivoadjunto.id
-          WHERE `sigmu`.`archivoadjunto`.`id_expediente` = '$id_expediente') OR 
-          (`sigmu`.`archivoadjunto`.`id_expediente` = '$id_expediente')
+          WHERE `archivo`.`archivoadjunto`.`id_expediente` = '$id_expediente') OR 
+          (`archivo`.`archivoadjunto`.`id_expediente` = '$id_expediente')
           ORDER BY archivoadjunto.id DESC")->result_array();
         }
     }
@@ -127,6 +128,7 @@ class Archivos_adjuntos_model extends MY_Model
             return $this->db->query("SELECT
             `archivoadjunto_alt`.`id`,
             `archivoadjunto_alt`.`nombre`,
+            `archivoadjunto_alt`.`ubicacion`,
             `archivoadjunto_alt`.`tamanio`,
             `archivoadjunto_alt`.`tipodecontenido`,
             `archivoadjunto_alt`.`pase_id`,
@@ -155,7 +157,7 @@ class Archivos_adjuntos_model extends MY_Model
     public function get_orden($expediente_id){
         if($expediente_id != NULL){
             if($this->usa_orden($expediente_id)){
-                $query = "SELECT orden FROM sigmu.archivoadjunto WHERE id_expediente = $expediente_id ORDER BY orden DESC LIMIT 1;";
+                $query = "SELECT orden FROM archivo.archivoadjunto WHERE id_expediente = $expediente_id ORDER BY orden DESC LIMIT 1;";
                 $result = $this->db->query($query)->result_array();
                 if($result[0]['orden'] == ''){
                     return 1;
@@ -169,7 +171,7 @@ class Archivos_adjuntos_model extends MY_Model
     }
 
     public function usa_orden($id = NULL){
-        $query = "SELECT COUNT(*) as cant FROM sigmu.archivoadjunto WHERE id_expediente = $id AND orden = 0;";
+        $query = "SELECT COUNT(*) as cant FROM archivo.archivoadjunto WHERE id_expediente = $id AND orden = 0;";
         $cant = $this->db->query($query)->result_array();
         if($cant[0]['cant'] > 0){
             return FALSE;

@@ -35,9 +35,10 @@
 		PDFJS.disableWorker = true;
 		var pdfDoc, scale, file, np, expediente_id;
 		expediente_id =<?php echo $expediente_id; ?>;
+
 		$(document).ready(function() {
 			file = '<?php echo base_url(); ?>/expedientes/expedientes/pdf_exportar/<?php echo $expediente_id; ?>/D';
-
+			console.log(file);
 			PDFJS.getDocument(file).then(function(doc) {
 				pdfDoc = doc;
 				np = (doc.numPages);
